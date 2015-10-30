@@ -12,7 +12,7 @@ import matlab.engine
 import theano
 import cPickle
 
-def test_SdA(observed, X, survival_time, at_risk_X,  K = 5, foldnum = 1, finetune_lr=0.0001, pretrain=True, pretraining_epochs=50, n_layers=10, n_hidden=140, coxphfit=True,
+def test_SdA(train_observed, train_X, train_y, at_risk_X, test_observed, test_X, test_y,  K = 5, foldnum = 1, finetune_lr=0.0001, pretrain=True, pretraining_epochs=50, n_layers=10, n_hidden=140, coxphfit=True,
              pretrain_lr=0.5, training_epochs=300, pretrain_mini_batch=True, batch_size=100, augment=False,
              drop_out=True, pretrain_dropout=False, dropout_rate=0.5, grad_check=False, plot=False, resultPath = ''):
     # observed, X, survival_time, at_risk_X = load_data('C:/Users/Song/Research/biomed/Survival/trainingData.csv')
@@ -24,17 +24,6 @@ def test_SdA(observed, X, survival_time, at_risk_X,  K = 5, foldnum = 1, finetun
     learning_rate_decay = .989    
     
     
-    if augment:
-        train_X, train_y, train_observed, at_risk_X, test_X, test_y, test_observed = load_augment_data()
-    else:
-#        observed, X, survival_time, at_risk_X = load_data()
-        test_size = len(X) / K
-        train_X = X[test_size:]
-        train_y = survival_time[test_size:]
-        train_observed = observed[test_size:]
-        test_observed = observed[:test_size]
-        test_X = X[:test_size]
-        test_y = survival_time[:test_size]
     n_ins = train_X.shape[1]
     n_train_batches = len(train_X) / batch_size if pretrain_mini_batch else 1
     # changed to theano shared variable in order to do minibatch
@@ -153,7 +142,7 @@ def test_SdA(observed, X, survival_time, at_risk_X,  K = 5, foldnum = 1, finetun
     epoch = 0
     while epoch < training_epochs:
         epoch += 1
-        print epoch                
+        #print epoch                
         avg_cost = train_fn(epoch)
         test_harzard = output_fn(epoch)
         if grad_check:
