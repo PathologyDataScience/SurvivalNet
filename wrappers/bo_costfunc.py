@@ -57,7 +57,7 @@ def bo_costfunc(params):
      non_lin=Sigmoid, alpha=5.5)
 
     cost = c[-1]
-    return cost
+    return (1 - cost)
     
 if __name__ == '__main__':
     bo_costfunc([2, 10, .1, .1, .3, 1.61585888e-01])
