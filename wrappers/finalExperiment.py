@@ -13,6 +13,7 @@ import numpy as np
 import scipy.io as sio
 from nonLinearities import ReLU, LeakyReLU, Sigmoid
 import cPickle
+import thread
 
 def calc_at_risk(X, T, O):
     tmp = list(T)
@@ -25,47 +26,51 @@ def calc_at_risk(X, T, O):
     X = X[order]
     return X, T, O, at_risk - 1
     
-def wrapper(maxShuffIter, path2data, path2output, validation = True):
-    for i in range(maxShuffIter):
-        p = path2data + 'shuffle' + str(i) + '.mat'    
-        print '*** shuffle #%d *** \n' % i                       
-        mat = sio.loadmat(p)
-        X = mat['X']
-        X = X.astype('float64')       
-        O = mat['C']
-        T = mat['T']
-        T = np.asarray([t[0] for t in T.transpose()])
-        O = 1 - np.asarray([o[0] for o in O.transpose()])
-        fold_size = int(15 * len(X) / 100)       
-        
-        X_test = X[:fold_size]
-        T_test = T[:fold_size]
-        O_test = O[:fold_size]
-        
-        X_train = X[fold_size * 2:]       
-        T_train = T[fold_size * 2:]
-        O_train = O[fold_size * 2:]
-        
-        if validation == True:
-            maxval, params, err = bayesopt_wrapper.bayesopt_tuning(i)
-            cost_func(O_train, X_train, T_train, O_test, X_test, T_test, i, resultPath = path2output, params = params)
-            
-        else: cost_func(O_train, X_train, T_train, O_test, X_test, T_test, i, resultPath = path2output, params = None)
+def wrapper(i, path2data, path2output, validation = True):
+    p = path2data + 'shuffle' + str(i) + '.mat'    
+    print '*** shuffle #%d *** \n' % i                       
+    mat = sio.loadmat(p)
+    X = mat['X']
+    X = X.astype('float64')       
+    O = mat['C']
+    T = mat['T']
+    T = np.asarray([t[0] for t in T.transpose()])
+    O = 1 - np.asarray([o[0] for o in O.transpose()])
+    fold_size = int(15 * len(X) / 100)       
     
-    return
+    X_test = X[:fold_size]
+    T_test = T[:fold_size]
+    O_test = O[:fold_size]
+    
+    X_train = X[fold_size * 2:]       
+    T_train = T[fold_size * 2:]
+    O_train = O[fold_size * 2:]
+    if validation == True:
+#        bb = 0
+        maxval, params, err = bayesopt_wrapper.bayesopt_tuning(i)
+        cost_func(O_train, X_train, T_train, O_test, X_test, T_test, i, resultPath = path2output, params = params)
+        
+    else: 
+        cost_func(O_train, X_train, T_train, O_test, X_test, T_test, i, resultPath = path2output, params = None)
+
 
 def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, resultPath, params = None):
         
-    print '*** Model assesment using selected params ***'    
+    print '*** Model assesment using selected params ***'   
+    outputFileName = os.path.join(resultPath, 'modelSelect' + str(shuffle_id) + '.txt')
+    f = file(outputFileName, 'wb')
+    cPickle.dump(params, f, protocol=cPickle.HIGHEST_PROTOCOL)
+    f.close()
+    
     if not os.path.exists(resultPath):
         os.makedirs(resultPath)
     if params == None:
         ## PARSET
-        n_layer = 0
-        hSize = 250
-        do_rate = 0
-        ftlr = .1
-        ptlr = 0.01
+        n_layer = 4
+        hSize = 275
+        do_rate = 0.1
+        ftlr = .001
+        ptlr = .001
     else:
         n_layer = params[0]
         hSize = params[1]
@@ -73,8 +78,8 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
         ftlr = params[3]
         do_rate = params[4]
     ## PARSET    
-    ptepochs=100
-    tepochs=100
+    ptepochs=200
+    tepochs=200
     bs = 1
     dropout = True
     pretrain = True
@@ -87,7 +92,7 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
      at_risk_test=at_risk_test, test_observed = o_test, test_X = x_test, test_y = t_test,\
      finetune_lr=ftlr, pretrain=pretrain, pretraining_epochs = ptepochs, n_layers=n_layer, n_hidden = hSize,\
      pretrain_lr=ptlr, training_epochs = tepochs , batch_size=bs, drop_out = dropout, dropout_rate= do_rate, \
-     non_lin=Sigmoid, alpha=5.5)
+     non_lin=ReLU, alpha=5.5)
     
     expID = 'pt' + str(pretrain) + 'ftlr' + str(ftlr) + '-' + 'pt' + str(ptepochs) + '-' + \
     'nl' + str(n_layer) + '-' + 'hs' + str(hSize) + '-' + \
@@ -116,9 +121,14 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
     return 
 if __name__ == '__main__':
         ## PARSET
-    pout = '/Users/Ayine/pySurv/Brain_P_results/sigmoid/Dec/'
+    
+    pout = '/Users/Ayine/pySurv/Brain_P_results/relu/Jan/'
     pin = '../data/Brain_P/'
-    wrapper(maxShuffIter = 10, path2data = pin, path2output = pout)
+    #maxShuffIter = 10
+    #for i in range(4):
+    #    print i
+    #    thread.start_new_thread(wrapper,(i, pin, pout, True))
+    wrapper(1, pin, pout, False)
 
 
 
