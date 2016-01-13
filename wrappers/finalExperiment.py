@@ -121,9 +121,8 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
     return 
 if __name__ == '__main__':
         ## PARSET
-    
-    pout = '/Users/Ayine/pySurv/Brain_P_results/relu/Jan/'
-    pin = '../data/Brain_P/'
+    pout = os.path.join(os.getcwd(), '../results/Brain_P_results/Relu/Jan/')
+    pin = os.path.join(os.getcwd(), '../data/Brain_P/')
     #maxShuffIter = 10
     #for i in range(4):
     #    print i
