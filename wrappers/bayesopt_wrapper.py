@@ -9,17 +9,25 @@ from bo_costfunc import bo_costfunc
 # Function for testing = bo_costfunc(flr, nl, hs, plr, dor)
 
 
-def bayesopt_tuning(i = 0):
+def bayesopt_tuning(i = 0, nonlin = 'sig'):
     params = {}
-    params['n_iterations'] = 20
+    params['n_iterations'] = 300
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
     print "*** Model Selection with BayesOpt ***"
     
     n = 6                   # n dimensions
-    lb = np.array([1, 10,  .0005, .0005, 0, i])
-    ub = np.array([10,300, .1,    .1,   .5, i])
+    if (nonlin == 'relu'):
+        lb = np.array([1, 10,  .0005, .0009, 0, i])
+        ub = np.array([5, 300, .00121,    .001,  .5, i])
+    elif (nonlin == 'sig'):
+        lb = np.array([1, 10,  .0005, .0005, 0, i])
+        ub = np.array([5, 300, .1,    .1,  .5, i])
+    else: #LEAKY RELU
+        lb = np.array([1, 10,  .0005, .0009, 0, i])
+        ub = np.array([5, 300, .00121,    .001,  .5, i])
+
     
     #lb = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     #ub = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
