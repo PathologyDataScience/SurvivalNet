@@ -27,7 +27,7 @@ def calc_at_risk(X, T, O):
     X = X[order]
     return X, T, O, at_risk - 1
     
-def wrapper(i, path2data, path2output, validation = True):
+def wrapper(i, path2data, path2output, nonlin, validation = True):
     p = path2data + 'shuffle' + str(i) + '.mat'    
     print '*** shuffle #%d *** \n' % i                       
     mat = sio.loadmat(p)
@@ -48,7 +48,7 @@ def wrapper(i, path2data, path2output, validation = True):
     O_train = O[fold_size * 2:]
     if validation == True:
 #        bb = 0
-        maxval, params, err = bayesopt_wrapper.bayesopt_tuning(i)
+        maxval, params, err = bayesopt_wrapper.bayesopt_tuning(i, nonlin)
         cost_func(O_train, X_train, T_train, O_test, X_test, T_test, i, resultPath = path2output, params = params)
         
     else: 
@@ -63,18 +63,30 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
     #cPickle.dump(params, f, protocol=cPickle.HIGHEST_PROTOCOL)
     #params = cPickle.load(f);   
     #f.close()
-#    brainparams_sig = np.array([[2, 300, 0.05, 0.01, 0.1],\
-#    [4,	275,	0.09,	0.01,	0.1],\
-#    [3,	172,	0.1,	0.02,	0.1],\
-#    [5,	96,	0.1,	0.04,	0],\
-#    [3,	180,	0.01,	0.01,	0],\
-#    [4,	299,	0.09,	0.001,	0],\
-#    [3,	299,	0.09,	0.007,	0.1],\
-#    [2,	299,	0.07,	0.001,	0],\
-#    [4,	299,	0.03,	0.01,	0.1],\
-#    [2,	195,	0.01,	0.03,	0.3]])
-#    
-#    params = brainparams_sig[shuffle_id]
+    brainparams_sig = np.array([[2, 300, 0.05, 0.01, 0.1],\
+    [4,	275,	0.09,	0.01,	0.1],\
+    [3,	172,	0.1,	0.02,	0.1],\
+    [5,	96,	0.1,	0.04,	0],\
+    [3,	180,	0.01,	0.01,	0],\
+    [4,	299,	0.09,	0.001,	0],\
+    [3,	299,	0.09,	0.007,	0.1],\
+    [2,	299,	0.07,	0.001,	0],\
+    [4,	299,	0.03,	0.01,	0.1],\
+    [2,	195,	0.01,	0.03,	0.3]])
+    
+    brainparams_relu = np.array([[1, 248, 0.00072, 0.00099, 0.0],\
+    [3,	300,	0.0012,	0.001,	0],\
+    [2,	226,	0.00082,	0.0009,	0],\
+    [2,	266,	0.0012,	0.00099,	0],\
+    [1,	242,	0.001,	0.00099,	0],\
+    [2,	278,	0.0012,	0.00091,	0],\
+    [1,	243,	0.001,	0.00099,	0],\
+    [1,	249,	0.001,	0.0009,	0],\
+    [5,	300,	0.001,	0.0009,	0],\
+    [1,	195,	0.00093,	0.0009,	0]])
+        
+    
+    params = brainparams_sig[shuffle_id]
 #    
     if not os.path.exists(resultPath):
         os.makedirs(resultPath)
@@ -138,12 +150,11 @@ def cost_func(O_train, X_train, T_train, O_test, X_test, T_test, shuffle_id, res
     return 
 if __name__ == '__main__':
     ## PARSET
-    pout = os.path.join(os.getcwd(), '../results/Brain_P_results/sigmoid/Dec/iter500/')
+    pout = os.path.join(os.getcwd(), '../results/Brain_P_results/Sigmoid/Dec/iter500/')
     pin = os.path.join(os.getcwd(), '../data/Brain_P/')
-    maxShuffIter = 10
-    for i in range(maxShuffIter):
-    	wrapper(i, pin, pout, False)
-
-
-
-                        
+    #maxShuffIter = 10
+    nonlin = 'relu'
+    for i in range(10):
+    #    print i
+    #    thread.start_new_thread(wrapper,(i, pin, pout, True))
+        wrapper(i, pin, pout, nonlin, False)
