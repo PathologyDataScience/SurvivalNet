@@ -25,8 +25,9 @@ def bayesopt_tuning(i = 0, nonlin = 'sig'):
         lb = np.array([1, 10,  .0005, .0005, 0, i])
         ub = np.array([5, 300, .1,    .1,  .5, i])
     else: #LEAKY RELU
-        lb = np.array([1, 10,  .0005, .0009, 0, i])
-        ub = np.array([5, 300, .00121,    .001,  .5, i])
+        # nl, hs, ptlr, ftlr, do_rate, split_id, leakage 
+        lb = np.array([1, 10,  .0005, .0009, 0, i, 5.5])
+        ub = np.array([5, 300, .00121,    .001,  .5, i, 5.5])
 
     
     #lb = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
