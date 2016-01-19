@@ -38,6 +38,7 @@ def bo_costfunc(params):
     ptlr = params[2] 
     ftlr = params[3]
     do_rate = params[4]
+
     
     ## PARSET 
     ptepochs=50
@@ -45,6 +46,11 @@ def bo_costfunc(params):
     bs = 1
     dropout = True
     pretrain = True
+    nonlin = ReLU
+    leakage = 0
+    if (nonlin == LeakyReLU):
+        leakage = params[6]
+    
     
     x_train, t_train, o_train, at_risk_train = finalExperiment.calc_at_risk(X_train, T_train, O_train);
     x_test, t_test, o_test, at_risk_test = finalExperiment.calc_at_risk(X_val, T_val, O_val);
@@ -54,7 +60,7 @@ def bo_costfunc(params):
      at_risk_test=at_risk_test, test_observed = o_test, test_X = x_test, test_y = t_test,\
      finetune_lr=ftlr, pretrain=pretrain, pretraining_epochs = ptepochs, n_layers=n_layer, n_hidden = hSize,\
      pretrain_lr=ptlr, training_epochs = tepochs , batch_size=bs, drop_out = dropout, dropout_rate= do_rate, \
-     non_lin=Sigmoid, alpha=5.5)
+     non_lin=nonlin, alpha=leakage)
 
     cost = c[-1]
     return (1 - cost)
