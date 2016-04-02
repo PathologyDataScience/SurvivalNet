@@ -19,7 +19,7 @@ def Run():
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
-    pin = os.path.join(os.getcwd(), '../survivalnet/data/Brain_P/')
+    pin = os.path.join(os.getcwd(), 'data/Brain_P/')
     numberOfShuffles = len([name for name in os.listdir(pin)])        
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
@@ -53,7 +53,7 @@ def Run():
         
         finetune_config = {'ft_lr':0.0001, 'ft_epochs':100}
         pretrain_config = {'pt_lr':0.01, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
-        #pretrain_config = None         #No pre-training 
+        pretrain_config = None         #No pre-training 
         n_layers = 3
         n_hidden = 100
         do_rate = 0
