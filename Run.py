@@ -5,7 +5,6 @@ Created on Sat Apr  2 17:59:16 2016
 @author: Ayine
 """
 import os
-from sklearn.preprocessing import scale
 import scipy.io as sio
 from SurvivalAnalysis import SurvivalAnalysis
 import Bayesian_Optimization
@@ -17,7 +16,7 @@ def Run():
     #where c-index and cost function values are saved 
     resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/Apr5/')
     if not os.path.exists(resultPath):
-        os.mkdir(resultPath)
+        os.makedirs(resultPath)
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
@@ -26,14 +25,14 @@ def Run():
     
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
-    BayesOpt = True
+    BayesOpt = False
         
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
         p = pin + 'shuffle' + str(i) + '.mat'            
         mat = sio.loadmat(p)
         X = mat['X']
-        X = scale(X.astype('float64'))
+        X = X.astype('float64')
 
         #C is censoring status. 0 means alive patient. We change it to O 
         #for comatibility with lifelines package        
@@ -63,7 +62,7 @@ def Run():
        #pretrain_config = None         #No pre-training 
         n_layers = 3
         n_hidden = 100
-        do_rate = 0
+        do_rate = 0.1
         non_lin = theano.tensor.nnet.relu
 
         if BayesOpt == True:
