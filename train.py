@@ -7,7 +7,6 @@ from Model import Model
 import numpy
 from lifelines.utils import _naive_concordance_index
 import theano
-#from nonLinearities import ReLU, LeakyReLU, Sigmoid
 
 def train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
@@ -18,11 +17,12 @@ def train(pretrain_set, train_set, test_set,
         
     # changed to theano shared variable in order to do minibatch
     #train_set = theano.shared(value=train_set, name='train_set')
+    
     # numpy random generator
     numpy_rng = numpy.random.RandomState(121212)
     print '... building the model'
 
-    # construct the stacked denoising autoencoder class
+    # construct the stacked denoising autoencoder and the corresponding regression network
     model = Model(
         numpy_rng = numpy_rng,
         n_ins = train_set['X'].shape[1],
@@ -83,10 +83,12 @@ def train(pretrain_set, train_set, test_set,
     while epoch < finetune_config['ft_epochs']:
         epoch += 1
         #print epoch    
-        train_cost, train_risk, train_features = forward(epoch, train_set['X'], train_set['O'], train_set['A'], 1)
+        train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
+        backward(train_set['X'], train_set['O'], train_set['A'], 1)
+
         train_c_index = _naive_concordance_index(train_set['T'], -train_risk, train_set['O'])
              
-        test_cost, test_risk, test_features = forward(epoch, test_set['X'], test_set['O'], test_set['A'], 0)
+        test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
         test_c_index = _naive_concordance_index(test_set['T'], -test_risk, test_set['O'])
         
         cindex_train.append(train_c_index)

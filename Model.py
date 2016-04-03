@@ -145,7 +145,7 @@ class Model(object):
                                                 learning_rate)
             # compile the theano function
             fn = theano.function(
-                on_unused_input='warn',
+                on_unused_input='ignore',
                 inputs=[
                     index,
                     theano.Param(corruption_level, default=0.2),
@@ -164,7 +164,6 @@ class Model(object):
 
     def build_finetune_functions(self, learning_rate):
         
-        index = T.lscalar('index')  # index to a [mini]batch
         is_train = T.iscalar('is_train')
         X = T.matrix('X')
         AtRisk = T.ivector('AtRisk')
@@ -172,9 +171,20 @@ class Model(object):
         #call the optimization function
         opt = Opt()
         forward = theano.function(
-            on_unused_input='warn',
-            inputs=[index, X, Observed, AtRisk, is_train],
+            on_unused_input='ignore',
+            inputs=[X, Observed, AtRisk, is_train],
             outputs=[self.riskLayer.cost(self.o, self.AtRisk), self.riskLayer.output, self.riskLayer.input],
+            givens={
+                self.x: X,
+                self.o: Observed,
+                self.AtRisk: AtRisk,
+                self.is_train:is_train
+            },
+            name='forward'
+        )
+        backward = theano.function(
+            on_unused_input='ignore',
+            inputs=[X, Observed, AtRisk, is_train],
             updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk), self.params, learning_rate),
             givens={
                 self.x: X,
@@ -184,8 +194,6 @@ class Model(object):
             },
             name='forward'
         )
-
-        backward = None
         return forward, backward
 
     def reset_weight(self, params):
