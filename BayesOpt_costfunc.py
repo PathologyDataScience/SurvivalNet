@@ -8,7 +8,6 @@ sys.path.insert(0, '..')
 from train import train
 import numpy as np
 import scipy.io as sio
-from sklearn.preprocessing import scale
 from SurvivalAnalysis import SurvivalAnalysis
 import theano
 def bayesopt_costfunc(params):
@@ -16,7 +15,7 @@ def bayesopt_costfunc(params):
     p = os.path.join(os.getcwd(), 'data/Brain_P/shuffle' + str(int(np.floor(params[5]))) + '.mat' )           
     mat = sio.loadmat(p)
     X = mat['X']
-    X = scale(X.astype('float64'))
+    X = X.astype('float64')
     
     #C is censoring status. 0 means alive patient. We change it to O 
     #for comatibility with lifelines package        

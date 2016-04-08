@@ -8,7 +8,7 @@ Created on Sat Apr  2 22:17:31 2016
 import bayesopt
 import numpy as np
 from time import clock
-from BayesOpt_costfunc import bo_costfunc
+from BayesOpt_costfunc import bayesopt_costfunc
 import theano
 
 def tune(i, nonlin):
