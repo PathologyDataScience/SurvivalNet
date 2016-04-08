@@ -69,7 +69,7 @@ def Run():
         do_rate = 0
         non_lin = theano.tensor.nnet.relu
 
-        if BayesOpt == False:
+        if BayesOpt == True:
             maxval, bo_params, err = Bayesian_Optimization.tune(i, non_lin)
             finetune_config = {'ft_lr':bo_params[3], 'ft_epochs':100}
             pretrain_config = {'pt_lr':bo_params[2], 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
