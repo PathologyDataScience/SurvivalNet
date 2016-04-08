@@ -10,8 +10,7 @@ import theano
 
 def train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
-             dropout_rate=0.5, non_lin=None):
-        
+             dropout_rate=0.5, non_lin=None):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
     learning_rate_decay = .989    
         

@@ -14,13 +14,13 @@ from train import train
 import theano
 def Run():      
     #where c-index and cost function values are saved 
-    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/Apr5/')
+    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/Apr7/')
     if not os.path.exists(resultPath):
-        os.makedirs(resultPath)
+        os.mkdir(resultPath)
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
-    pin = os.path.join(os.getcwd(), 'data/Brain_P/')
+    pin = os.path.join(os.getcwd(), 'data/Brain_PC/')
     numberOfShuffles = len([name for name in os.listdir(pin)])        
     
     # Use Bayesian Optimization for model selection, 
@@ -29,15 +29,19 @@ def Run():
         
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
-        p = pin + 'shuffle' + str(i) + '.mat'            
+        order = pin + 'shuffle' + str(i) + '.mat'            
+        p = pin + 'Brain_PC.mat'            
+        order = sio.loadmat(order)
+        order = order['order']
+        order = np.asarray([i[0] for i in order.transpose()])
+
         mat = sio.loadmat(p)
-        X = mat['X']
-        X = X.astype('float64')
+        X = mat['X'][order]
 
         #C is censoring status. 0 means alive patient. We change it to O 
         #for comatibility with lifelines package        
-        C = mat['C']
-        T = mat['T']
+        C = mat['C'][order]
+        T = mat['T'][order]
         T = np.asarray([t[0] for t in T.transpose()])
         O = 1 - np.asarray([c[0] for c in C.transpose()])
         
@@ -62,10 +66,10 @@ def Run():
        #pretrain_config = None         #No pre-training 
         n_layers = 3
         n_hidden = 100
-        do_rate = 0.1
+        do_rate = 0
         non_lin = theano.tensor.nnet.relu
 
-        if BayesOpt == True:
+        if BayesOpt == False:
             maxval, bo_params, err = Bayesian_Optimization.tune(i, non_lin)
             finetune_config = {'ft_lr':bo_params[3], 'ft_epochs':100}
             pretrain_config = {'pt_lr':bo_params[2], 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}

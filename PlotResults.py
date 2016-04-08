@@ -35,13 +35,13 @@ def plotresults(path = '', msr = 'ci', colori = 0, n = 100):
 
 
 if __name__ == '__main__':
-    path = os.path.join(os.getcwd(), './results/Brain_P_results/relu/Apr3/')
-    msr = 'ci_tst'
-    plotresults(path, msr, 0, 100)
+    #path = os.path.join(os.getcwd(), './results/Brain_P_results/relu/Apr3/')
+    #msr = 'ci_tst'
+    #plotresults(path, msr, 0, 100)
  
-#    path = os.path.join(os.getcwd(), './results/Brain_P_results/relu/Apr2/')
-#    msr = 'lpl_trn'
-#    plotresults(path, msr, 2, 50)
+    path = os.path.join(os.getcwd(), './results/Brain_P_results/relu/Apr5/')
+    msr = 'ci_tst'
+    plotresults(path, msr, 2, 100)
 
  #   path = os.path.join(os.getcwd(), '../results/Brain_P_results/Relu/Jan/')
  #   msr = 'ci'
@@ -49,6 +49,6 @@ if __name__ == '__main__':
    
     plt.plot(range(100), np.ones(100) * .72 , color='c', marker='s', lw=2, ms=5, mfc = 'c', markevery = 5)     
 
-    plt.legend(['relu nn', 'cox'], loc=4, prop={'size':12});
+    plt.legend(['relu nn','pretrained relu nn', 'cox'], loc=4, prop={'size':12});
     #plt.ylim([.50, .9])
     plt.show()

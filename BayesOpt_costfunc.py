@@ -8,6 +8,7 @@ sys.path.insert(0, '..')
 from train import train
 import numpy as np
 import scipy.io as sio
+from sklearn.preprocessing import scale
 from SurvivalAnalysis import SurvivalAnalysis
 import theano
 def bayesopt_costfunc(params):
@@ -15,7 +16,7 @@ def bayesopt_costfunc(params):
     p = os.path.join(os.getcwd(), 'data/Brain_P/shuffle' + str(int(np.floor(params[5]))) + '.mat' )           
     mat = sio.loadmat(p)
     X = mat['X']
-    X = X.astype('float64')
+    X = scale(X.astype('float64'))
     
     #C is censoring status. 0 means alive patient. We change it to O 
     #for comatibility with lifelines package        
@@ -43,8 +44,8 @@ def bayesopt_costfunc(params):
     sa.calc_at_risk(X[fold_size:2*fold_size], T[fold_size:2*fold_size], O[fold_size:2*fold_size]);
 
     ## PARSET 
-    finetune_config = {'ft_lr':params[3], 'ft_epochs':10}
-    pretrain_config = {'pt_lr':params[2], 'pt_epochs':10, 'pt_batchsize':None,'corruption_level':.0}
+    finetune_config = {'ft_lr':params[3], 'ft_epochs':50}
+    pretrain_config = {'pt_lr':params[2], 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
     n_layers = int(params[0])
     n_hidden = int(params[1])
     do_rate = params[4]

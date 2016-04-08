@@ -130,7 +130,7 @@ class Model(object):
         corruption_level = T.scalar('corruption')   # % of corruption
         learning_rate = T.scalar('lr')              # learning rate
 
-        is_train = numpy.cast['int32'](0) #value does not matter
+
         if batch_size:
             # begining of a batch, given `index`
             batch_begin = index * batch_size
@@ -155,7 +155,6 @@ class Model(object):
                 updates=updates,
                 givens={
                     self.x: pretrain_x,
-                    self.is_train: is_train
                 }
             )
             # append `fn` to the list of functions

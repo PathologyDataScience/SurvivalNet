@@ -8,7 +8,7 @@ Created on Sat Apr  2 22:17:31 2016
 import bayesopt
 import numpy as np
 from time import clock
-from BayesOpt_costfunc import bayesopt_costfunc
+from BayesOpt_costfunc import bo_costfunc
 import theano
 
 def tune(i, nonlin):
@@ -28,7 +28,7 @@ def tune(i, nonlin):
         ub = np.array([5, 300, .1,    .1,  .5, i])
 
     start = clock()
-    mvalue, x_out, error = bayesopt.optimize(bayesopt_costfunc, n, lb, ub, params)
+    mvalue, x_out, error = bayesopt.optimize(bo_costfunc, n, lb, ub, params)
     
     #mvalue, x_out, error = bayesopt.optimize_discrete(bo_costfunc, x_set, params)
     print "Result", mvalue, "at", x_out
