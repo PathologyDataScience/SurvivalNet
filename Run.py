@@ -42,8 +42,8 @@ def Run():
         #for comatibility with lifelines package        
         C = mat['C'][order]
         T = mat['T'][order]
-        T = np.asarray([t[0] for t in T.transpose()])
-        O = 1 - np.asarray([c[0] for c in C.transpose()])
+        T = np.asarray([t[0] for t in T])
+        O = 1 - np.asarray([c[0] for c in C])
         
         #Use the whole dataset fotr pretraining
         pretrain_set = X
