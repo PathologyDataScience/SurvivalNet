@@ -16,7 +16,7 @@ def Run():
     #where c-index and cost function values are saved 
     resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/Apr7/')
     if not os.path.exists(resultPath):
-        os.mkdir(resultPath)
+        os.makedirs(resultPath)
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
