@@ -2,7 +2,7 @@
 """
 Created on Thu Mar 17 01:26:50 2016
 
-@author: Ayine
+@author: Safoora
 """
 #import warnings
 import theano
