@@ -110,8 +110,7 @@ class BFGS(object):
         self.theta_t = x0
         self.old_fval = f(self.theta_t)
         self.gf_t = fprime(x0)
-        if (numpy.linalg.norm(self.gf_t < self.tol))
-            return        
+       
         self.rho_t = -numpy.dot(self.H_t, self.gf_t)
         #print "diff = ", sum(abs(self.rho_t + self.gf_t))
         #print self.rho_t
@@ -155,8 +154,6 @@ class BFGS(object):
 
     def BFGS(self):
 
-         if self.tol = None:
-             self.tol = .0000001
 #        updates = [
 #            (params[i], self.bfgs_min(
 #                    f=f,
