@@ -186,6 +186,7 @@ class Model(object):
             on_unused_input='ignore',
             inputs=[X, Observed, AtRisk, is_train],
             updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk), self.params, learning_rate),
+            outputs=T.grad(self.riskLayer.cost(self.o, self.AtRisk), self.params),
             givens={
                 self.x: X,
                 self.o: Observed,
