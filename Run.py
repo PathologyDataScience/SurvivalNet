@@ -2,27 +2,39 @@
 """
 Created on Sat Apr  2 17:59:16 2016
 
-@author: Ayine
+@author: Safoora Yousefi
 """
 import os
 import scipy.io as sio
 from SurvivalAnalysis import SurvivalAnalysis
-import Bayesian_Optimization
+#import Bayesian_Optimization
 import cPickle
 import numpy as np
 from train import train
 import theano
+import shutil
+
 def Run():      
     #where c-index and cost function values are saved 
-    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/Apr7/')
+    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/Demo')
     if not os.path.exists(resultPath):
         os.makedirs(resultPath)
+    else:
+        shutil.rmtree(resultPath)
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
-    pin = os.path.join(os.getcwd(), 'data/Brain_PC/')
-    numberOfShuffles = len([name for name in os.listdir(pin)])        
-    
+    numberOfShuffles = 1#len([name for name in os.listdir(pin)])        
+    pin = os.path.join(os.getcwd(), 'data/Glioma/shuffles/')
+    c = os.path.join(os.getcwd(), 'data/Glioma/Brain_C.mat')
+    p = os.path.join(os.getcwd(), 'data/Glioma/Brain_P.mat')
+
+    Brain_C = sio.loadmat(c)
+    Brain_P = sio.loadmat(p)
+
+    T = np.asarray([t[0] for t in Brain_C['Survival']])
+    O = 1 - np.asarray([c[0] for c in Brain_C['Censored']])
+    X = Brain_P['Expression']
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
     BayesOpt = False
@@ -30,20 +42,16 @@ def Run():
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
         order = pin + 'shuffle' + str(i) + '.mat'            
-        p = pin + 'Brain_PC.mat'            
         order = sio.loadmat(order)
         order = order['order']
-        order = np.asarray([i[0] for i in order.transpose()])
+        order = np.asarray([e[0] for e in order.transpose()])
 
-        mat = sio.loadmat(p)
-        X = mat['X'][order]
+        X = X[order]
 
         #C is censoring status. 0 means alive patient. We change it to O 
         #for comatibility with lifelines package        
-        C = mat['C'][order]
-        T = mat['T'][order]
-        T = np.asarray([t[0] for t in T])
-        O = 1 - np.asarray([c[0] for c in C])
+        O = O[order]
+        T = T[order]
         
         #Use the whole dataset fotr pretraining
         pretrain_set = X
@@ -61,11 +69,11 @@ def Run():
         test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
         
         
-        finetune_config = {'ft_lr':0.0001, 'ft_epochs':100}
-        pretrain_config = {'pt_lr':0.01, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
+        finetune_config = {'ft_lr':0.001, 'ft_epochs':25}
+        pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
        #pretrain_config = None         #No pre-training 
-        n_layers = 3
-        n_hidden = 100
+        n_layers = 10
+        n_hidden = 20
         do_rate = 0
         non_lin = theano.tensor.nnet.relu
 
@@ -78,7 +86,7 @@ def Run():
             n_hidden = bo_params[1]
             do_rate = bo_params[4]
 
-        train_cost_list, cindex_train, test_cost_list, cindex_test = train(pretrain_set, train_set, test_set,
+        train_cost_list, cindex_train, test_cost_list, cindex_test, model = train(pretrain_set, train_set, test_set,
                  pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
                  dropout_rate=do_rate, non_lin = non_lin)
         
@@ -108,6 +116,11 @@ def Run():
         outputFileName = os.path.join(resultPath, expID  + 'lpl_tst')
         f = file(outputFileName, 'wb')
         cPickle.dump(test_cost_list, f, protocol=cPickle.HIGHEST_PROTOCOL)
+        f.close()
+        
+        outputFileName = os.path.join(resultPath, expID  + 'final_model')
+        f = file(outputFileName, 'wb')
+        cPickle.dump(model, f, protocol=cPickle.HIGHEST_PROTOCOL)
         f.close()
 if __name__ == '__main__':
     Run()
