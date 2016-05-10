@@ -11,8 +11,8 @@ class SurvivalAnalysis(object):
     """
     def c_index(self, Risk, T, C):
         #count orderable pairs
-        Orderable = 0
-        Score = 0
+        Orderable = 0.0
+        Score = 0.0
         for i in range(len(T)):
             for j in range(i+1,len(T)):
                 if(C[i] == 0 and C[j] == 0):
