@@ -7,10 +7,12 @@ from Model import Model
 import numpy
 from lifelines.utils import _naive_concordance_index
 import theano
+from BFGS import BFGS
+from SurvivalAnalysis import SurvivalAnalysis 
 
 def train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
-             dropout_rate=0.5, non_lin=None):    
+             dropout_rate=0.5, non_lin=None, optim = 'GD'):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
     learning_rate_decay = .989    
         
@@ -67,7 +69,7 @@ def train(pretrain_set, train_set, test_set,
     ########################
 
     print '... getting the finetuning functions'
-    forward, backward = model.build_finetune_functions(
+    forward, backward, _ = model.build_finetune_functions(
         learning_rate=finetune_lr
     )
 
@@ -77,15 +79,27 @@ def train(pretrain_set, train_set, test_set,
     cindex_test = []
     train_cost_list = []
     test_cost_list = []
-
+    #gradient_sizes = []
+    bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'], 1)
+    survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
     while epoch < finetune_config['ft_epochs']:
         epoch += 1
         #print epoch    
         train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
-        backward(train_set['X'], train_set['O'], train_set['A'], 1)
-
-        train_c_index = _naive_concordance_index(train_set['T'], -train_risk, train_set['O'])
+        if optim == 'BFGS':        
+            bfgs.BFGS()	
+            #gradient_sizes.append(numpy.linalg.norm(bfgs.gf_t))        
+        elif optim == 'GD':
+            #idx = 0
+            grads = backward(train_set['X'], train_set['O'], train_set['A'], 1)
+        	#gradients = []
+        	#for i in range(len(grads)):
+              #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
+              #      idx += grads[i].size
+              #      gradient_sizes.append(numpy.linalg.norm(gradients))        
+        #train_c_index = _naive_concordance_index(train_set['T'], -train_risk, train_set['O'])
+        train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
         test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
         test_c_index = _naive_concordance_index(test_set['T'], -test_risk, test_set['O'])
@@ -102,4 +116,4 @@ def train(pretrain_set, train_set, test_set,
         updates={finetune_lr: finetune_lr * learning_rate_decay})    
         decay_learning_rate()
     print 'best score is: %f' % max(cindex_test)
-    return train_cost_list, cindex_train, test_cost_list, cindex_test
+    return train_cost_list, cindex_train, test_cost_list, cindex_test, model
