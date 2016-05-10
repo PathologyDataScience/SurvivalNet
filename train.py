@@ -102,7 +102,8 @@ def train(pretrain_set, train_set, test_set,
         train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
         test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
-        test_c_index = _naive_concordance_index(test_set['T'], -test_risk, test_set['O'])
+        #test_c_index = _naive_concordance_index(test_set['T'], -test_risk, test_set['O'])
+        test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
         
         cindex_train.append(train_c_index)
         cindex_test.append(test_c_index)
