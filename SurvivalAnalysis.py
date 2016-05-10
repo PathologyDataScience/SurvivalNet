@@ -9,6 +9,38 @@ import numpy as np
 class SurvivalAnalysis(object):
     """ This class contains methods used in survival analysis
     """
+    def c_index(self, Risk, T, C):
+        #count orderable pairs
+        Orderable = 0
+        Score = 0
+        for i in range(len(T)):
+            for j in range(i+1,len(T)):
+                if(C[i] == 0 and C[j] == 0):
+                    Orderable = Orderable + 1
+                    if(T[i] > T[j]):
+                        if(Risk[j] > Risk[i]):
+                            Score = Score + 1
+                    elif(T[j] > T[i]):
+                        if(Risk[i] > Risk[j]):
+                            Score = Score + 1
+                    else:
+                        if(Risk[i] == Risk[j]):
+                            Score = Score + 1
+                elif(C[i] == 1 and C[j] == 0):
+                    if(T[i] >= T[j]):
+                        Orderable = Orderable + 1
+                        if(T[i] > T[j]):
+                            if(Risk[j] > Risk[i]):
+                                Score = Score + 1
+                elif(C[j] == 1 and C[i] == 0):
+                    if(T[j] >= T[i]):
+                        Orderable = Orderable + 1
+                        if(T[j] > T[i]):
+                            if(Risk[i] > Risk[j]):
+                                Score = Score + 1
+        
+        #print score to screen
+        return Score / Orderable
     def calc_at_risk(self, X, T, O):
         """
         Calculate the at risk group of all patients. For every patient i, this
