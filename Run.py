@@ -13,12 +13,15 @@ import numpy as np
 from train import train
 import theano
 import shutil
-
+def pickSubType(subtypesVec, subtype):
+    inds = [i for i in range(len(subtypesVec)) if (subtypesVec[i] == subtype)]
+    return inds
 def Run():      
     #where c-index and cost function values are saved 
-    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/Demo')
+    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/Demo2')
     if os.path.exists(resultPath):
         shutil.rmtree(resultPath)
+        os.makedirs(resultPath)
     else:
         os.makedirs(resultPath)
 
@@ -36,6 +39,15 @@ def Run():
     T = np.asarray([t[0] for t in Brain_C['Survival']])
     O = 1 - np.asarray([c[0] for c in Brain_C['Censored']])
     X = Brain_P['Expression']
+    print X.shape
+
+    concat = np.zeros((len(X), 2))
+    inds = pickSubType(Brain_C['Subtype'], 'IDHmut-non-codel')
+    concat[inds] = [1,0]
+    inds = pickSubType(Brain_C['Subtype'], 'IDHmut-codel')
+    concat[inds] = [1,1]
+    X = np.concatenate((concat, X), 1)
+    print X.shape
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
     BayesOpt = False
@@ -59,14 +71,14 @@ def Run():
                 
         #foldsize denotes th amount of data used for testing. The same amount 
         #of data is used for model selection. The rest is used for training.
-        fold_size = int(15 * len(X) / 100)
+        fold_size = int(30 * len(X) / 100)
         
         train_set = {}
         test_set = {}
 
         #caclulate the risk group for every patient i: patients who die after i
         sa = SurvivalAnalysis()    
-        train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[fold_size * 2:], T[fold_size * 2:], O[fold_size * 2:]);
+        train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[fold_size:], T[fold_size:], O[fold_size:]);
         test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
         
         
