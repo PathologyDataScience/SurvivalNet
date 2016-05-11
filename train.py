@@ -69,7 +69,7 @@ def train(pretrain_set, train_set, test_set,
     ########################
 
     print '... getting the finetuning functions'
-    forward, backward, _ = model.build_finetune_functions(
+    forward, backward = model.build_finetune_functions(
         learning_rate=finetune_lr
     )
 
