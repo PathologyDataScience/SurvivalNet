@@ -41,9 +41,10 @@ def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
             
 class BFGS(object):
 
-    def __init__(self, model, x, o, atrisk, is_tr):
+    def __init__(self, model, x, o, atrisk):
         self.cost = model.riskLayer.cost
         self.params = model.params
+        is_tr = T.iscalar('is_train')
 
         #print "original params class: ", len(params), params[0].get_value().shape, params[1].get_value().shape, params[2].get_value().shape
         #change shape of params to array   
@@ -63,12 +64,12 @@ class BFGS(object):
             self.params]), borrow = "true")
             
         self.gradient = theano.function(on_unused_input='ignore',
-                                   inputs=[],
+                                   inputs=[is_tr],
                                    outputs = T.grad(self.cost(o, atrisk), self.params),
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
                                    name='gradient')
         self.cost_func = theano.function(on_unused_input='ignore',
-                                   inputs=[],
+                                   inputs=[is_tr],
                                    outputs = self.cost(o, atrisk),
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
                                    name='cost_func')   
@@ -85,7 +86,7 @@ class BFGS(object):
             self.params[i].set_value(p)
         #print "params diff:", sum(sum(abs(params[0].get_value() - tmp)))
 
-        c = -self.cost_func() 
+        c = -self.cost_func(1) 
         #print "cost =", c
         return c
   
@@ -100,7 +101,7 @@ class BFGS(object):
             idx += self.params[i].get_value().size
             self.params[i].set_value(p)
 
-        gs = self.gradient()
+        gs = self.gradient(1)
         gf = numpy.concatenate([g.ravel() for g in gs])
         #print "gcost = ", -gf
         return -gf
@@ -171,5 +172,3 @@ class BFGS(object):
             idx += self.params[i].get_value().size
             self.params[i].set_value(p)        
         return
-
-        
