@@ -80,7 +80,7 @@ def train(pretrain_set, train_set, test_set,
     train_cost_list = []
     test_cost_list = []
     #gradient_sizes = []
-    bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'], 1)
+    bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
     survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
     while epoch < finetune_config['ft_epochs']:
