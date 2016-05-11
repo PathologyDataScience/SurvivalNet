@@ -10,6 +10,27 @@ class SurvivalAnalysis(object):
     """ This class contains methods used in survival analysis
     """
     def c_index(self, Risk, T, C):
+        """
+        Calculate concordance index to evaluate model prediction.
+        C-index calulates the fraction of all pairs of subjects whose predicted
+        survival times are correctly ordered among all subjects that can actually be ordered, i.e.
+        both of them are uncensored or the uncensored time of one is smaller than 
+        the censored survival time of the other.
+
+        
+        Parameters
+        ----------
+        Risk: numpy.ndarray
+           m sized array of predicted risk (do not confuse with predicted survival time!)
+        T: numpy.ndarray
+           m sized vector of time of death or last follow up
+        C: numpy.ndarray
+           m sized vector of censored status (do not confuse with observed status!)
+
+        Returns
+        -------
+        A value between 0 and 1 indicating concordance index. 
+        """
         #count orderable pairs
         Orderable = 0.0
         Score = 0.0
