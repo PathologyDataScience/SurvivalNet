@@ -9,7 +9,8 @@ import theano
 import warnings
 import numpy
 import theano.tensor as T
-#from scipy.optimize.linesearch import LineSearchWarning
+from scipy.optimize.linesearch import LineSearchWarning
+import scipy
 from LineSearch import line_search_wolfe1, line_search_wolfe2, LineSearchWarning, _LineSearchError
 
 def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
@@ -160,8 +161,10 @@ class BFGS(object):
 #                    f=f,
 #                    x0=theta.get_value(),
 #                    fprime=fprime))]
-        theta_val = self.bfgs_min(
-                    f=self.f,
+        of = scipy.optimize.fmin_cg 
+	of = scipy.optimize.fmin_l_bfgs_b
+	theta_val,_,_ = of(
+                    func=self.f,
                     x0=self.theta.get_value(),
                     fprime=self.fprime)
         self.theta.set_value(theta_val)

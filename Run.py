@@ -7,7 +7,7 @@ Created on Sat Apr  2 17:59:16 2016
 import os
 import scipy.io as sio
 from SurvivalAnalysis import SurvivalAnalysis
-#import Bayesian_Optimization
+import Bayesian_Optimization
 import cPickle
 import numpy as np
 from train import train
@@ -18,7 +18,7 @@ def pickSubType(subtypesVec, subtype):
     return inds
 def Run():      
     #where c-index and cost function values are saved 
-    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/Demo2')
+    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/BayesOpt')
     if os.path.exists(resultPath):
         shutil.rmtree(resultPath)
         os.makedirs(resultPath)
@@ -28,8 +28,8 @@ def Run():
     #where the data (possibly multiple cross validation sets) are stored
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
-    numberOfShuffles = 1#len([name for name in os.listdir(pin)])        
     pin = os.path.join(os.getcwd(), 'data/Glioma/shuffles/')
+    numberOfShuffles = len([name for name in os.listdir(pin)])        
     c = os.path.join(os.getcwd(), 'data/Glioma/Brain_C.mat')
     p = os.path.join(os.getcwd(), 'data/Glioma/Brain_P.mat')
 
@@ -39,19 +39,18 @@ def Run():
     T = np.asarray([t[0] for t in Brain_C['Survival']])
     O = 1 - np.asarray([c[0] for c in Brain_C['Censored']])
     X = Brain_P['Expression']
-    print X.shape
 
-    concat = np.zeros((len(X), 2))
-    inds = pickSubType(Brain_C['Subtype'], 'IDHmut-non-codel')
-    concat[inds] = [1,0]
-    inds = pickSubType(Brain_C['Subtype'], 'IDHmut-codel')
-    concat[inds] = [1,1]
-    X = np.concatenate((concat, X), 1)
-    print X.shape
+    #concat = np.zeros((len(X), 2))
+    #inds = pickSubType(Brain_C['Subtype'], 'IDHmut-non-codel')
+    #concat[inds] = [1,0]
+    #inds = pickSubType(Brain_C['Subtype'], 'IDHmut-codel')
+    #concat[inds] = [1,1]
+    #X = np.concatenate((concat, X), 1)
+    
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
-    BayesOpt = False
-        
+    BayesOpt = True
+    opt = 'BFGS'    
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
         order = pin + 'shuffle' + str(i) + '.mat'            
@@ -66,12 +65,12 @@ def Run():
         O = O[order]
         T = T[order]
         
-        #Use the whole dataset fotr pretraining
+        #Use the entire dataset for pretraining
         pretrain_set = X
                 
         #foldsize denotes th amount of data used for testing. The same amount 
         #of data is used for model selection. The rest is used for training.
-        fold_size = int(30 * len(X) / 100)
+        fold_size = int(20 * len(X) / 100)
         
         train_set = {}
         test_set = {}
@@ -82,26 +81,27 @@ def Run():
         test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
         
         
-        finetune_config = {'ft_lr':0.001, 'ft_epochs':25}
-        pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
+       # finetune_config = {'ft_lr':0.001, 'ft_epochs':25}
+       # pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
        #pretrain_config = None         #No pre-training 
-        n_layers = 10
-        n_hidden = 20
-        do_rate = 0
+       # n_layers = 10
+       # n_hidden = 20
+       # do_rate = 0
         non_lin = theano.tensor.nnet.relu
 
         if BayesOpt == True:
-            maxval, bo_params, err = Bayesian_Optimization.tune(i, non_lin)
-            finetune_config = {'ft_lr':bo_params[3], 'ft_epochs':100}
-            pretrain_config = {'pt_lr':bo_params[2], 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
-           #pretrain_config = None         #No pre-training 
+            maxval, bo_params, err = Bayesian_Optimization.tune(non_lin)
+            finetune_config = {'ft_lr':.001, 'ft_epochs':30}
+            #pretrain_config = {'pt_lr':.001, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
+            pretrain_config = None         #No pre-training 
             n_layers = bo_params[0]
             n_hidden = bo_params[1]
-            do_rate = bo_params[4]
+            do_rate = bo_params[2]
+	    opt = 'BFGS'
 
         train_cost_list, cindex_train, test_cost_list, cindex_test, model = train(pretrain_set, train_set, test_set,
                  pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
-                 dropout_rate=do_rate, non_lin = non_lin)
+                 dropout_rate=do_rate, non_lin = non_lin, optim = opt)
         
 
         #Save results in the desired folder         
