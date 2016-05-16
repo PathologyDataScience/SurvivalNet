@@ -1,1 +1,3 @@
 *.pyc
+*.lprof
+results/
