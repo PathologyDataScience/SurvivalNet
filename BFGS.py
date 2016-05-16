@@ -123,7 +123,7 @@ class BFGS(object):
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
         except _LineSearchError:
             print 'Line search failed to find a better solution.\n'         
-            theta_next = self.theta_t + self.gf_t * .001
+            theta_next = self.theta_t + self.gf_t * .0001
             return theta_next
         print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t
@@ -172,7 +172,7 @@ class BFGS(object):
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
         except _LineSearchError:
             print 'Line search failed to find a better solution.\n'         
-            theta_next = self.theta_t + self.gf_t * .001
+            theta_next = self.theta_t + self.gf_t * .0001
             return theta_next
         print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t
