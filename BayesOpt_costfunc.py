@@ -64,7 +64,7 @@ def bayesopt_costfunc(params):
         
     	## PARSET 
     	finetune_config = {'ft_lr':0.01, 'ft_epochs':20}
-    	pretrain_config = {'pt_lr':0.01, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
+    	#pretrain_config = {'pt_lr':0.01, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
 
     	n_layers = int(params[0])
     	n_hidden = int(params[1])
@@ -79,7 +79,7 @@ def bayesopt_costfunc(params):
  
    	_, _, _, cindex_test,_ = train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
-             dropout_rate=do_rate, non_lin=theano.tensor.nnet.relu, optim = "BFGS")
+             dropout_rate=do_rate, non_lin=theano.tensor.nnet.relu, optim = "GDLS")
     
     	avg_cost += cindex_test[-1]
     return (1 - avg_cost/numberOfShuffles)

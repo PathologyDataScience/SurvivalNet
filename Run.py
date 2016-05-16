@@ -50,12 +50,12 @@ def Run():
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
     BayesOpt = True
-    opt = 'GD'    
+    opt = 'GDLS'    
     finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
     #pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
     pretrain_config = None         #No pre-training 
-    n_layers = 6
-    n_hidden = 100
+    n_layers = 10
+    n_hidden = 300
     do_rate = 0.1
     non_lin = theano.tensor.nnet.relu
 

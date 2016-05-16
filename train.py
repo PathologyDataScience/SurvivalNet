@@ -8,6 +8,7 @@ import numpy
 from lifelines.utils import _naive_concordance_index
 import theano
 from BFGS import BFGS
+from GDLS import GDLS
 from SurvivalAnalysis import SurvivalAnalysis 
 
 def train(pretrain_set, train_set, test_set,
@@ -80,7 +81,10 @@ def train(pretrain_set, train_set, test_set,
     train_cost_list = []
     test_cost_list = []
     #gradient_sizes = []
-    bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
+    if optim == 'BFGS':        
+        bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
+    elif optim == 'GDLS':
+	gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
     survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
     while epoch < finetune_config['ft_epochs']:
@@ -90,6 +94,8 @@ def train(pretrain_set, train_set, test_set,
         if optim == 'BFGS':        
             bfgs.BFGS()	
             #gradient_sizes.append(numpy.linalg.norm(bfgs.gf_t))        
+        elif optim == 'GDLS':        
+            gdls.GDLS()	
         elif optim == 'GD':
             #idx = 0
             grads = backward(train_set['X'], train_set['O'], train_set['A'], 1)
