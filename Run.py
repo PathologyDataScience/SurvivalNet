@@ -29,7 +29,7 @@ def Run():
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
     pin = os.path.join(os.getcwd(), 'data/Glioma/shuffles/')
-    numberOfShuffles = len([name for name in os.listdir(pin)])        
+    numberOfShuffles = 1#len([name for name in os.listdir(pin)])        
     c = os.path.join(os.getcwd(), 'data/Glioma/Brain_C.mat')
     p = os.path.join(os.getcwd(), 'data/Glioma/Brain_P.mat')
 
@@ -49,7 +49,7 @@ def Run():
     
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
-    BayesOpt = True
+    BayesOpt = False
     opt = 'BFGS'    
     for i in range(numberOfShuffles): 
         #file names: shuffle0.mat, etc.
@@ -81,12 +81,12 @@ def Run():
         test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
         
         
-       # finetune_config = {'ft_lr':0.001, 'ft_epochs':25}
-       # pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
-       #pretrain_config = None         #No pre-training 
-       # n_layers = 10
-       # n_hidden = 20
-       # do_rate = 0
+        finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
+        #pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
+        pretrain_config = None         #No pre-training 
+        n_layers = 3
+        n_hidden = 100
+        do_rate = 0.1
         non_lin = theano.tensor.nnet.relu
 
         if BayesOpt == True:
