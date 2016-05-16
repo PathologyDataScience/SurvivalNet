@@ -29,7 +29,7 @@ def Run():
     #we use 10 permutations of the data and consequently 10 different training 
     #and testing splits to produce the results in the paper
     pin = os.path.join(os.getcwd(), 'data/Glioma/shuffles/')
-    numberOfShuffles = 1#len([name for name in os.listdir(pin)])        
+    numberOfShuffles = len([name for name in os.listdir(pin)])        
     c = os.path.join(os.getcwd(), 'data/Glioma/Brain_C.mat')
     p = os.path.join(os.getcwd(), 'data/Glioma/Brain_P.mat')
 
@@ -49,9 +49,31 @@ def Run():
     
     # Use Bayesian Optimization for model selection, 
     #if false ,manually set parameters will be used
-    BayesOpt = False
-    opt = 'BFGS'    
+    BayesOpt = True
+    opt = 'GD'    
+    finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
+    #pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
+    pretrain_config = None         #No pre-training 
+    n_layers = 6
+    n_hidden = 100
+    do_rate = 0.1
+    non_lin = theano.tensor.nnet.relu
+
+    if BayesOpt == True:
+        maxval, bo_params, err = Bayesian_Optimization.tune(non_lin)
+        n_layers = bo_params[0]
+        n_hidden = bo_params[1]
+        do_rate = bo_params[2]
+	opt = 'BFGS'
+    print "***selected model***"  
+    expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
+    'dor'+ str(do_rate)       
+    print expID
+         
     for i in range(numberOfShuffles): 
+        expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
+        'dor'+ str(do_rate) + '-id' + str(i)       
+        print expID
         #file names: shuffle0.mat, etc.
         order = pin + 'shuffle' + str(i) + '.mat'            
         order = sio.loadmat(order)
@@ -77,39 +99,15 @@ def Run():
 
         #caclulate the risk group for every patient i: patients who die after i
         sa = SurvivalAnalysis()    
-        train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[fold_size:], T[fold_size:], O[fold_size:]);
+        train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[fold_size * 2:], T[fold_size * 2:], O[fold_size * 2:]);
         test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
         
         
-        finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
-        #pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
-        pretrain_config = None         #No pre-training 
-        n_layers = 3
-        n_hidden = 100
-        do_rate = 0.1
-        non_lin = theano.tensor.nnet.relu
-
-        if BayesOpt == True:
-            maxval, bo_params, err = Bayesian_Optimization.tune(non_lin)
-            finetune_config = {'ft_lr':.001, 'ft_epochs':30}
-            #pretrain_config = {'pt_lr':.001, 'pt_epochs':50, 'pt_batchsize':None,'corruption_level':.0}
-            pretrain_config = None         #No pre-training 
-            n_layers = bo_params[0]
-            n_hidden = bo_params[1]
-            do_rate = bo_params[2]
-	    opt = 'BFGS'
-
         train_cost_list, cindex_train, test_cost_list, cindex_test, model = train(pretrain_set, train_set, test_set,
                  pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
                  dropout_rate=do_rate, non_lin = non_lin, optim = opt)
         
 
-        #Save results in the desired folder         
-        expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
-        'dor'+ str(do_rate) + '-id' + str(i)       
-    
-        print expID
-         
         ## write output to file
         outputFileName = os.path.join(resultPath, expID  + 'ci_tst')
         f = file(outputFileName, 'wb')
