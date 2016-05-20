@@ -31,7 +31,7 @@ def tune(nonlin):
     x_set = []
     for l in layers:
 	for h in hsizes:
-        for d in drates:
+            for d in drates:
 	        x_set.append([l, h, d])
     x_set = np.array(x_set, dtype=float)
     #x_set = np.array([[1, 3, 5, 7, 9, 10],\
