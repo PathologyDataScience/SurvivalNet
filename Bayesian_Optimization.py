@@ -13,7 +13,7 @@ import theano
 
 def tune(nonlin):
     params = {}
-    params['n_iterations'] = 1000
+    params['n_iterations'] = 216
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
