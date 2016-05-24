@@ -30,7 +30,7 @@ def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
                              **kwargs)
 
     if ret[0] is None:
-        print 'line search failed: try different one.'
+        #print 'line search failed: try different one.'
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', LineSearchWarning)
             ret = line_search_wolfe2(f, fprime, xk, pk, gfk,
@@ -109,7 +109,8 @@ class GDLS(object):
     #Gradient Descent with line search
     def gd_ls(self, f, x0, fprime):
         #print "Next iteration of bfgs"
-        self.theta_t = x0
+        disp = False
+	self.theta_t = x0
         self.old_fval = f(self.theta_t)
         self.gf_t = fprime(x0)
         self.rho_t = -self.gf_t
@@ -119,10 +120,10 @@ class GDLS(object):
                  _line_search_wolfe12(f, fprime, self.theta_t, self.rho_t, self.gf_t,
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
         except _LineSearchError:
-            print 'Line search failed to find a better solution.\n'         
+            #print 'Line search failed to find a better solution.\n'         
             theta_next = self.theta_t + self.gf_t * .0001
             return theta_next
-        print "Line Search Success! eps = ", self.eps_t
+        if disp: print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t
         return theta_next 
  

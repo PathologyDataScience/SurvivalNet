@@ -1,0 +1,38 @@
+*** Model Selection with BayesOpt ***
+- 10:36:17.501344 INFO: Expected 3 hyperparameters. Replicating parameters and prior.
+- 10:36:17.501430 INFO: Usign default parameters for criteria.
+ERROR (theano.sandbox.cuda): Failed to compile cuda_ndarray.cu: libcublas.so.7.5: cannot open shared object file: No such file or directory
+nl7-hs150-dor0.5-id0
+162600
+nl7-hs150-dor0.5-id1
+162600
+nl7-hs150-dor0.5-id2
+162600
+nl7-hs150-dor0.5-id3
+162600
+nl7-hs150-dor0.5-id4
+162600
+nl7-hs150-dor0.5-id5
+162600
+nl7-hs150-dor0.5-id6
+162600
+nl1-hs10-dor0.0-id0
+1780
+- 10:43:24.429923 ERROR: Unknown error
+Traceback (most recent call last):
+  File "Run.py", line 136, in <module>
+    Run()
+  File "Run.py", line 63, in Run
+    maxval, bo_params, err = Bayesian_Optimization.tune(non_lin)
+  File "/home/syouse3/git/PySurv2.0/survivalnet/Bayesian_Optimization.py", line 31, in tune
+    mvalue, x_out, error = bayesopt.optimize_discrete(bayesopt_costfunc, x_set, params)
+  File "bayesopt.pyx", line 273, in bayesopt.optimize_discrete (/root/Downloads/BayesOpt/bayesopt/python/bayesopt.cpp:3532)
+  File "bayesopt.pyx", line 215, in bayesopt.raise_problem (/root/Downloads/BayesOpt/bayesopt/python/bayesopt.cpp:2548)
+Exception: Unknown error
+*** Model Selection with BayesOpt ***
+- 10:44:51.074935 INFO: Expected 3 hyperparameters. Replicating parameters and prior.
+- 10:44:51.075027 INFO: Usign default parameters for criteria.
+ERROR (theano.sandbox.cuda): Failed to compile cuda_ndarray.cu: libcublas.so.7.5: cannot open shared object file: No such file or directory
+*** Model Selection with BayesOpt ***
+- 10:56:19.362947 INFO: Expected 3 hyperparameters. Replicating parameters and prior.
+- 10:56:19.363025 INFO: Usign default parameters for criteria.

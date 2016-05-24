@@ -132,6 +132,8 @@ class BFGS(object):
         delta_t = theta_next - self.theta_t
         self.theta_t = theta_next
         
+	if gf_next == None:
+	    gf_next = fprime(theta_next)
         self.phi_t = gf_next - self.gf_t
 
         self.gf_t = gf_next
@@ -150,13 +152,9 @@ class BFGS(object):
 	"""
 	#Fast calculation after simplifiation of the above
 	Z = numpy.dot(self.H_t, self.phi_t)
-	print "Z"
 	self.H_t -= denom * Z[:, numpy.newaxis] * delta_t[numpy.newaxis,:]
-	print "next"
 	self.H_t -= denom * delta_t[:, numpy.newaxis] * Z[numpy.newaxis, :]
-	print "next"
 	self.H_t += denom * denom * numpy.dot(self.phi_t, Z) * delta_t[:, numpy.newaxis] * delta_t[numpy.newaxis,:]
-	print "end"
         return theta_next
     #Gradient Descent with line search
 

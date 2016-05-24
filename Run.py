@@ -18,7 +18,7 @@ def pickSubType(subtypesVec, subtype):
     return inds
 def Run():      
     #where c-index and cost function values are saved 
-    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BFGS/BayesOpt')
+    resultPath = os.path.join(os.getcwd(), 'results/Brain_P_results/relu/BO_disc/GDLS')
     if os.path.exists(resultPath):
         shutil.rmtree(resultPath)
         os.makedirs(resultPath)
@@ -54,9 +54,9 @@ def Run():
     finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
     #pretrain_config = {'pt_lr':0.01, 'pt_epochs':100, 'pt_batchsize':None,'corruption_level':.0}
     pretrain_config = None         #No pre-training 
-    n_layers = 10
-    n_hidden = 300
-    do_rate = 0.1
+    n_layers = 2
+    n_hidden = 33
+    do_rate = 0.5
     non_lin = theano.tensor.nnet.relu
 
     if BayesOpt == True:
@@ -64,7 +64,6 @@ def Run():
         n_layers = bo_params[0]
         n_hidden = bo_params[1]
         do_rate = bo_params[2]
-	opt = 'BFGS'
     print "***selected model***"  
     expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
     'dor'+ str(do_rate)       
