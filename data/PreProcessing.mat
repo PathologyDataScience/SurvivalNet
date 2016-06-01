@@ -13,7 +13,7 @@ Integ_Symbs = Symbols(desired, :);
 Integ_Symb_Types = SymbolTypes(desired,:);
 
 %% Remove patients with > 20% missing values
-JunkPatients = sum(isnan(Integ_X')) > .2 * size(Integ_X, 2);
+JunkPatients = (sum(isnan(Integ_X')) > .2 * size(Integ_X, 2)) | isnan(Survival) | isnan(Censored);
 Integ_X = Integ_X(~JunkPatients,:);
 Integ_Patients = Samples(~JunkPatients,:);
 Integ_Survival = Survival(~JunkPatients)';
