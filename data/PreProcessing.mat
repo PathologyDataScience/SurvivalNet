@@ -20,7 +20,7 @@ Integ_Survival = Survival(~JunkPatients)';
 Integ_Censored = Censored(~JunkPatients)';
 
 %% Remove features with still > 20% missing values
-JunkFeatures = sum(isnan(Integ_X)) > .2 * size(Integ_X, 1);
+JunkFeatures = sum(isnan(Integ_X)) > .2 * size(Integ_X, 1) | (min(Integ_X) == max(Integ_X));
 Integ_X = Integ_X(:,~JunkFeatures);
 Integ_Symbs = Integ_Symbs(~JunkFeatures, :);
 Integ_Symb_Types = Integ_Symb_Types(~JunkFeatures, :);
