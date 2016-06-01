@@ -1,0 +1,31 @@
+clear all;
+load('GBMLGG.Data.p.mat');
+
+Features = Features';
+
+%% Set desired features
+desired_types = ['Clinical'; 'Protein '; 'Mutation'; 'CNV-Arm '; 'CNV-Gene']; 
+
+%% Pick desired features
+desired = all(ismember(SymbolTypes, desired_types), 2);
+X_Integ = Features(:, desired);
+Integ_Symbs = Symbols(desired, :);
+Integ_Symb_Types = SymbolTypes(desired,:);
+
+%% Remove patients with > 20% missing values
+JunkPatients = sum(isnan(X_Integ')) > .2 * size(X_Integ, 2);
+X_Integ = X_Integ(~JunkPatients,:);
+Integ_Patients = Samples(~JunkPatients,:);
+
+%% Remove features with still > 20% missing values
+JunkFeatures = sum(isnan(X_Integ)) > .2 * size(X_Integ, 1);
+X_Integ = X_Integ(:,~JunkFeatures);
+Integ_Symbs = Integ_Symbs(~JunkFeatures, :);
+Integ_Symb_Types = Integ_Symb_Types(~JunkFeatures, :);
+
+%% Impute Missing Values
+X_Integ = knnimpute(X_Integ')';
+%% Normalize 
+X_Integ = zscore(X_Integ);
+
+save('Brain_Integ.mat', 'X_Integ', 'Integ_Symbs', 'Integ_Symb_Types', 'Integ_Patients');
