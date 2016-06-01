@@ -8,24 +8,26 @@ desired_types = ['Clinical'; 'Protein '; 'Mutation'; 'CNV-Arm '; 'CNV-Gene'];
 
 %% Pick desired features
 desired = all(ismember(SymbolTypes, desired_types), 2);
-X_Integ = Features(:, desired);
+Integ_X = Features(:, desired);
 Integ_Symbs = Symbols(desired, :);
 Integ_Symb_Types = SymbolTypes(desired,:);
 
 %% Remove patients with > 20% missing values
-JunkPatients = sum(isnan(X_Integ')) > .2 * size(X_Integ, 2);
-X_Integ = X_Integ(~JunkPatients,:);
+JunkPatients = sum(isnan(Integ_X')) > .2 * size(Integ_X, 2);
+Integ_X = Integ_X(~JunkPatients,:);
 Integ_Patients = Samples(~JunkPatients,:);
+Integ_Survival = Survival(~JunkPatients)';
+Integ_Censored = Censored(~JunkPatients)';
 
 %% Remove features with still > 20% missing values
-JunkFeatures = sum(isnan(X_Integ)) > .2 * size(X_Integ, 1);
-X_Integ = X_Integ(:,~JunkFeatures);
+JunkFeatures = sum(isnan(Integ_X)) > .2 * size(Integ_X, 1);
+Integ_X = Integ_X(:,~JunkFeatures);
 Integ_Symbs = Integ_Symbs(~JunkFeatures, :);
 Integ_Symb_Types = Integ_Symb_Types(~JunkFeatures, :);
 
 %% Impute Missing Values
-X_Integ = knnimpute(X_Integ')';
+Integ_X = knnimpute(Integ_X')';
 %% Normalize 
-X_Integ = zscore(X_Integ);
+Integ_X = zscore(Integ_X);
 
-save('Brain_Integ.mat', 'X_Integ', 'Integ_Symbs', 'Integ_Symb_Types', 'Integ_Patients');
+save('Brain_Integ.mat', 'Integ_X', 'Integ_Survival', 'Integ_Censored', 'Integ_Symbs', 'Integ_Symb_Types', 'Integ_Patients');
