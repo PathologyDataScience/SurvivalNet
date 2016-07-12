@@ -2,7 +2,7 @@
 """
 Created on Sat Apr  2 22:17:31 2016
 
-@author: Ayine
+@author: Safoora
 """
 
 import bayesopt
@@ -13,7 +13,7 @@ import theano
 
 def tune(nonlin):
     params = {}
-    params['n_iterations'] = 216
+    params['n_iterations'] = 1000
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
@@ -37,8 +37,11 @@ def tune(nonlin):
     #x_set = np.array([[1, 3, 5, 7, 9, 10],\
     #                  [10, 50, 100, 150, 200, 300],\
     #                  [0, 1, 3, 5, 7, 9]], dtype=float).transpose()
-    
+    print x_set.shape
+
+    print x_set
     mvalue, x_out, error = bayesopt.optimize_discrete(bayesopt_costfunc, x_set, params)
     print "Result", mvalue, "at", x_out
     print "Running time:", clock() - start, "seconds"
     return mvalue, x_out, error
+    
