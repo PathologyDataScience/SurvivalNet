@@ -3,17 +3,19 @@ __author__ = 'Safoora'
 import timeit
 import sys
 import os
+from ResNetModel import ResNetModel
+from RealResNetModel import RealResNetModel
 from Model import Model
 import numpy
-from lifelines.utils import _naive_concordance_index
 import theano
 from BFGS import BFGS
 from GDLS import GDLS
 from SurvivalAnalysis import SurvivalAnalysis 
+from EarlyStopping import isOverfitting
 
 def train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
-             dropout_rate=0.5, non_lin=None, optim = 'GD'):    
+             dropout_rate=0.5, non_lin=None, optim = 'GD', disp = True, earlystp = True, reg1 = 0, reg2 =0):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
     learning_rate_decay = .989    
         
@@ -21,8 +23,8 @@ def train(pretrain_set, train_set, test_set,
     #train_set = theano.shared(value=train_set, name='train_set')
     
     # numpy random generator
-    numpy_rng = numpy.random.RandomState(121212)
-    print '... building the model'
+    numpy_rng = numpy.random.RandomState()
+    #if disp: print '... building the model'
 
     # construct the stacked denoising autoencoder and the corresponding regression network
     model = Model(
@@ -31,7 +33,9 @@ def train(pretrain_set, train_set, test_set,
         hidden_layers_sizes = [n_hidden] * n_layers,
         n_outs = 1,
         dropout_rate=dropout_rate,
-        non_lin=non_lin)
+        non_lin=non_lin,
+	reg1 = reg1, 
+	reg2 = reg2)
         
     #########################
     # PRETRAINING THE MODEL #
@@ -39,10 +43,10 @@ def train(pretrain_set, train_set, test_set,
     if pretrain_config is not None:
         n_train_batches = len(train_set) / pretrain_config['pt_batchsize'] if pretrain_config['pt_batchsize'] else 1
             
-        print '... getting the pretraining functions'
+        if disp: print '... getting the pretraining functions'
         pretraining_fns = model.pretraining_functions(pretrain_set,
                                                     pretrain_config['pt_batchsize'])
-        print '... pre-training the model'
+        if disp: print '... pre-training the model'
         start_time = timeit.default_timer()
         # de-noising level
         corruption_levels = [pretrain_config['corruption_level']] * n_layers
@@ -56,12 +60,12 @@ def train(pretrain_set, train_set, test_set,
                              corruption=corruption_levels[i],
                              lr=pretrain_config['pt_lr']))
                              
-                print "Pre-training layer %i, epoch %d, cost" % (i, epoch),
-                print numpy.mean(c)
+                if disp: print "Pre-training layer %i, epoch %d, cost" % (i, epoch),
+                if disp: print numpy.mean(c)
 
         end_time = timeit.default_timer()
         
-        print >> sys.stderr, ('The pretraining code for file ' +
+        if disp: print >> sys.stderr, ('The pretraining code for file ' +
                               os.path.split(__file__)[1] +
                               ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
@@ -69,12 +73,12 @@ def train(pretrain_set, train_set, test_set,
     # FINETUNING THE MODEL #
     ########################
 
-    print '... getting the finetuning functions'
+    #if disp: print '... getting the finetuning functions'
     forward, backward = model.build_finetune_functions(
         learning_rate=finetune_lr
     )
 
-    print '... finetunning the model'
+    #if disp: print '... finetunning the model'
     # early-stopping parameters
     cindex_train = []
     cindex_test = []
@@ -88,9 +92,9 @@ def train(pretrain_set, train_set, test_set,
     survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
     while epoch < finetune_config['ft_epochs']:
-        epoch += 1
         #print epoch    
         train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
+	#print train_features.mean()
         if optim == 'BFGS':        
             bfgs.BFGS()	
             #gradient_sizes.append(numpy.linalg.norm(bfgs.gf_t))        
@@ -104,11 +108,9 @@ def train(pretrain_set, train_set, test_set,
               #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
               #      idx += grads[i].size
               #      gradient_sizes.append(numpy.linalg.norm(gradients))        
-        #train_c_index = _naive_concordance_index(train_set['T'], -train_risk, train_set['O'])
         train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
         test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
-        #test_c_index = _naive_concordance_index(test_set['T'], -test_risk, test_set['O'])
         test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
         
         cindex_train.append(train_c_index)
@@ -117,10 +119,19 @@ def train(pretrain_set, train_set, test_set,
         train_cost_list.append(train_cost)
         test_cost_list.append(test_cost)
         
-        print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
-        
+        if disp: print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
+        if earlystp and epoch >= 15 and (epoch % 5 == 0):
+            if disp: print "Checking overfitting!"
+            check, maxIter = isOverfitting(numpy.asarray(cindex_test))
+            if check:                
+                print "Training Stopped Due to Overfitting! cindex = %f, MaxIter = %d" %(cindex_test[maxIter], maxIter)
+                break
+	else: maxIter = epoch
+    	sys.stdout.flush()
         decay_learning_rate = theano.function(inputs=[], outputs=finetune_lr, \
         updates={finetune_lr: finetune_lr * learning_rate_decay})    
         decay_learning_rate()
-    print 'best score is: %f' % max(cindex_test)
-    return train_cost_list, cindex_train, test_cost_list, cindex_test, model
+        epoch += 1
+    	if numpy.isnan(test_cost): break 
+    if disp: print 'best score is: %f' % max(cindex_test)
+    return train_cost_list, cindex_train, test_cost_list, cindex_test, model, maxIter
