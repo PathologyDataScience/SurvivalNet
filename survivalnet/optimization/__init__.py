@@ -8,6 +8,7 @@ from .Bayesian_Optimization import Bayesian_Optimization
 from .BFGS import BFGS
 from .EarlyStopping import EarlyStopping
 from .GLDS import GLDS
+from .Optimization import Optimization
 from .SurvivalAnalysis import SurvivalAnalysis
 
 
@@ -19,5 +20,6 @@ __all__ = (
 	'EarlyStopping',
 	'GLDS',
 	'LineSearch',
+	'Optimization',
 	'SurvivalAnalysis',
 )

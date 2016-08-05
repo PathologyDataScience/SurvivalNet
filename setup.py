@@ -4,7 +4,7 @@ except ImportError:
     from distutils.core import setup
 
 import os
-from pkg_resources import parse_requirements, RequirementParseError
+from pkg_resources import parse_requirements
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -15,7 +15,7 @@ with open('LICENSE') as f:
 try:
     with open('requirements.txt') as f:
         ireqs = parse_requirements(f.read())
-except RequirementParseError:
+except SyntaxError:
     raise
 requirements = [str(req) for req in ireqs]
 
