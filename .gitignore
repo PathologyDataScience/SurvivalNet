@@ -1,3 +1,7 @@
 *.pyc
 *.lprof
+data/
 results/
+build
+dist
+*.egg-info

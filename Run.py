@@ -1,13 +1,14 @@
+import survivalnet as sn
 import sys
 sys.path.append('./..')
 import os
 import scipy.io as sio
 from time import clock
-from optimization import SurvivalAnalysis
-from . import  Bayesian_Optimization
+from survivalnet.optimization import SurvivalAnalysis
+import Bayesian_Optimization as BayesOpt
 import cPickle
 import numpy as np
-from .train import train
+from survivalnet.train import train
 import theano
 import shutil
 
@@ -16,7 +17,7 @@ def pickSubType(subtypesVec, subtype):
   return inds
 def Run():      
 #where c-index and cost function values are saved 
-  resultPath = os.path.join(os.getcwd(), '../results/Final/LUSC_Integ/')
+  resultPath = os.path.join(os.getcwd(), './results/')
   if os.path.exists(resultPath):
       shutil.rmtree(resultPath)
       os.makedirs(resultPath)
@@ -25,14 +26,14 @@ def Run():
   #where the data (possibly multiple cross validation sets) are stored
   #we use 10 permutations of the data and consequently 10 different training 
   #and testing splits to produce the results in the paper
-  p = os.path.join(os.getcwd(), '../data/LUSC_Integ.mat')
+  p = os.path.join(os.getcwd(), 'data/LUSC_Integ.mat')
   D = sio.loadmat(p)
   T = np.asarray([t[0] for t in D['Survival']])
   O = 1 - np.asarray([c[0] for c in D['Censored']])
   X = D['Integ_X']
   # Use Bayesian Optimization for model selection, 
-  #if false ,manually set parameters will be used
-  BayesOpt = True
+  #if false, manually set parameters will be used
+  doBayesOpt = True
   opt = 'GDLS'    
   #pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000, 'pt_batchsize':None,'corruption_level':.3}
   pretrain_config = None         #No pre-training 
@@ -42,9 +43,9 @@ def Run():
   avg_cost = 0
   i = 0 
   while i < numberOfShuffles: 
-    if BayesOpt == True:
+    if doBayesOpt == True:
       print '***Model Selection with BayesOpt for shuffle', str(i), '***'
-      maxval, bo_params, err = Bayesian_Optimization.tune(i)
+      maxval, bo_params, err = BayesOpt.tune(i)
       n_layers = bo_params[0]
       n_hidden = bo_params[1]
       do_rate = bo_params[2]
