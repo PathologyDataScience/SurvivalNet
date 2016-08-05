@@ -10,7 +10,6 @@ import time
 import warnings
 import numpy
 import theano.tensor as T
-from scipy.optimize.linesearch import LineSearchWarning
 import scipy
 from .LineSearch import line_search_wolfe1, line_search_wolfe2, LineSearchWarning, _LineSearchError
 

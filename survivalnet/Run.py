@@ -4,7 +4,7 @@ import os
 import scipy.io as sio
 from time import clock
 from optimization import SurvivalAnalysis
-from optimization import Bayesian_Optimization
+from . import  Bayesian_Optimization
 import cPickle
 import numpy as np
 from .train import train

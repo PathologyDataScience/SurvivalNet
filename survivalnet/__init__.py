@@ -11,9 +11,9 @@ from . import model
 from .train import train
 
 # must be imported before Bayesian_Optimizaiton
-from .CostFunction import CostFunction
+from .CostFunction import cost_func, aggr_st_cost_func, st_cost_func
 
-from .Bayesian_Optimization import Bayesian_Optimizaiton
+from .Bayesian_Optimization import tune
 
 from .Run import Run
 

@@ -1,7 +1,7 @@
 # imported before Bayesian_Optimization
 from .BFGS import BFGS
-from .EarlyStopping import EarlyStopping
-from .GLDS import GLDS
+from .EarlyStopping import isOverfitting
+from .GDLS import GDLS
 from .Optimization import Optimization
 from .SurvivalAnalysis import SurvivalAnalysis
 
@@ -9,7 +9,7 @@ from .SurvivalAnalysis import SurvivalAnalysis
 # list functions and classes available for public use
 __all__ = (
 	'BFGS',
-	'EarlyStopping',
+	'isOverfitting',
 	'GLDS',
 	'LineSearch',
 	'Optimization',
