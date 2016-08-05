@@ -9,7 +9,7 @@ from .RiskLayer import RiskLayer
 from .HiddenLayer import HiddenLayer
 from .DropoutHiddenLayer import DropoutHiddenLayer
 from .SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
-from optimization import Optimization as Opt
+from survivalnet.optimization import Optimization as Opt
 
 
 class Model(object):
