@@ -5,11 +5,11 @@ Created on Tue Oct 20 12:53:54 2015
 import sys
 import os
 sys.path.append('./../')
-from train import train
+from survivalnet.train import train
 import numpy as np
 import cPickle
 import scipy.io as sio
-from SurvivalAnalysis import SurvivalAnalysis
+from optimization import SurvivalAnalysis
 import theano
 import shutil
 def pickSubType(subtypesVec, subtype):

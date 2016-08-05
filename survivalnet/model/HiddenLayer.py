@@ -3,7 +3,7 @@ __docformat__ = 'restructedtext en'
 import numpy
 import theano
 import theano.tensor as T
-#from nonLinearities import ReLU, LeakyReLU, Sigmoid
+
 
 class HiddenLayer(object):
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,

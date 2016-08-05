@@ -5,13 +5,14 @@ import theano
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
-from RiskLayer import RiskLayer
-from HiddenLayer import HiddenLayer
-from DropoutHiddenLayer import DropoutHiddenLayer
-from SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
-#from nonLinearities import ReLU, LeakyReLU
-from Optimization import Optimization as Opt
-class ResNetModel(object):
+from .RiskLayer import RiskLayer
+from .HiddenLayer import HiddenLayer
+from .DropoutHiddenLayer import DropoutHiddenLayer
+from .SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
+from survivalnet.optimization import Optimization as Opt
+
+
+class Model(object):
     """ This class is made to pretrain and fine tune a variable number of layers."""
     def __init__(
         self,
@@ -79,9 +80,6 @@ class ResNetModel(object):
                 if i == 0:
                     input_size = n_ins
                     layer_input = self.x
-                elif i == self.n_layers - 1:
-                    input_size = hidden_layers_sizes[i - 1] + n_ins
-                    layer_input = numpy.concatenate((self.hidden_layers[-1].output,self.x), axis=0)
                 else:
                     input_size = hidden_layers_sizes[i - 1]
                     layer_input = self.hidden_layers[-1].output
@@ -124,7 +122,7 @@ class ResNetModel(object):
                 input=self.hidden_layers[-1].output,
                 n_in=hidden_layers_sizes[-1],
                 n_out=n_outs,
-                rng = numpy_rng,
+                rng = numpy_rng
             )
     
         self.params.extend(self.riskLayer.params)
@@ -217,4 +215,4 @@ class ResNetModel(object):
     def reset_weight_by_rate(self, rate):
         for i in xrange(self.n_layers):
             self.hidden_layers[i].reset_weight_by_rate(rate)
-            
+

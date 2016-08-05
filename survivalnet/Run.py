@@ -1,21 +1,16 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr  2 17:59:16 2016
-
-@author: Safoora Yousefi
-"""
 import sys
 sys.path.append('./..')
 import os
 import scipy.io as sio
 from time import clock
-from SurvivalAnalysis import SurvivalAnalysis
-import Bayesian_Optimization
+from optimization import SurvivalAnalysis
+from . import  Bayesian_Optimization
 import cPickle
 import numpy as np
-from train import train
+from .train import train
 import theano
 import shutil
+
 def pickSubType(subtypesVec, subtype):
   inds = [i for i in range(len(subtypesVec)) if (subtypesVec[i] == subtype)]
   return inds
