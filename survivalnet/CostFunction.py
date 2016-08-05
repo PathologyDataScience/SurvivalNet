@@ -1,7 +1,3 @@
-"""
-Created on Tue Oct 20 12:53:54 2015
-@author: syouse3
-"""
 import sys
 import os
 sys.path.append('./../')
