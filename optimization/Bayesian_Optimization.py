@@ -9,7 +9,7 @@ sys.path.append('./../')
 import bayesopt
 import numpy as np
 from time import clock
-from CostFunction import cost_func, aggr_st_cost_func, st_cost_func, panorg_cost_func
+from .CostFunction import cost_func, aggr_st_cost_func, st_cost_func, panorg_cost_func
 import theano
 
 def tune(i):

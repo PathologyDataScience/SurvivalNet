@@ -5,12 +5,13 @@ import theano
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
-from RiskLayer import RiskLayer
-from HiddenLayer import HiddenLayer
-from DropoutHiddenLayer import DropoutHiddenLayer
-from SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
-#from nonLinearities import ReLU, LeakyReLU
-from Optimization import Optimization as Opt
+from .RiskLayer import RiskLayer
+from .HiddenLayer import HiddenLayer
+from .DropoutHiddenLayer import DropoutHiddenLayer
+from .SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
+from .Optimization import Optimization as Opt
+
+
 class Model(object):
     """ This class is made to pretrain and fine tune a variable number of layers."""
     def __init__(

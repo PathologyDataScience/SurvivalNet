@@ -12,7 +12,7 @@ import numpy
 import theano.tensor as T
 from scipy.optimize.linesearch import LineSearchWarning
 import scipy
-from LineSearch import line_search_wolfe1, line_search_wolfe2, LineSearchWarning, _LineSearchError
+from .LineSearch import line_search_wolfe1, line_search_wolfe2, LineSearchWarning, _LineSearchError
 
 def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
                          **kwargs):
@@ -41,13 +41,14 @@ def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
 
     return ret
             
-class GDLS(object):
+class BFGS(object):
 
     def __init__(self, model, x, o, atrisk):
         self.cost = model.riskLayer.cost
         self.params = model.params
         is_tr = T.iscalar('is_train')
 
+        #print "original params class: ", len(params), params[0].get_value().shape, params[1].get_value().shape, params[2].get_value().shape
         #change shape of params to array   
         
         self.theta_shape = sum([self.params[i].get_value().size for i in range(len(self.params))])
@@ -55,6 +56,9 @@ class GDLS(object):
         
         self.old_old_fval = None       
         N = self.theta_shape
+        self.H_t = numpy.eye(N, dtype=numpy.float32)
+        
+
         print self.theta_shape
         
         self.theta = theano.shared(value=numpy.zeros(self.theta_shape, dtype=theano.config.floatX))
@@ -105,16 +109,15 @@ class GDLS(object):
         gf = numpy.concatenate([g.ravel() for g in gs])
         #print "gcost = ", -gf
         return -gf
-   
-    #Gradient Descent with line search
-    def gd_ls(self, f, x0, fprime):
+    #@profile
+    def bfgs_min(self, f, x0, fprime):
         #print "Next iteration of bfgs"
         self.theta_t = x0
         self.old_fval = f(self.theta_t)
         self.gf_t = fprime(x0)
-        self.rho_t = -self.gf_t
-        try:
-            #print "starting line search:"
+       
+        self.rho_t = -numpy.dot(self.H_t, self.gf_t)
+	try:
             self.eps_t, fc, gc, self.old_fval, self.old_old_fval, gf_next = \
                  _line_search_wolfe12(f, fprime, self.theta_t, self.rho_t, self.gf_t,
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
@@ -124,10 +127,50 @@ class GDLS(object):
             return theta_next
         print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t
-        return theta_next 
- 
-    def GDLS(self):
-	of = self.gd_ls
+        #return self.theta_t + self.eps_t * self.rho_t
+    
+        delta_t = theta_next - self.theta_t
+        self.theta_t = theta_next
+        
+        self.phi_t = gf_next - self.gf_t
+
+        self.gf_t = gf_next
+	print self.H_t.shape
+	denom = 1.0 / (numpy.dot(self.phi_t, delta_t)) 
+        # SLOW calculation as in Wright, and Nocedal 'Numerical Optimization', 1999, pg. 198.    
+        """
+        I = numpy.eye(len(x0), dtype=int)
+        A = I - self.phi_t[:, numpy.newaxis] * delta_t[numpy.newaxis, :] * denom
+        #print "***estimating H***"
+	self.H_t[...] = numpy.dot(self.H_t, A)       
+	A[...] = I - delta_t[:, numpy.newaxis] * self.phi_t[numpy.newaxis, :] * denom
+	self.H_t[...] = numpy.dot(A, self.H_t) + (denom * delta_t[:, numpy.newaxis] *
+                                             delta_t[numpy.newaxis, :])
+        A = None 
+	"""
+	#Fast calculation after simplifiation of the above
+	Z = numpy.dot(self.H_t, self.phi_t)
+	print "Z"
+	self.H_t -= denom * Z[:, numpy.newaxis] * delta_t[numpy.newaxis,:]
+	print "next"
+	self.H_t -= denom * delta_t[:, numpy.newaxis] * Z[numpy.newaxis, :]
+	print "next"
+	self.H_t += denom * denom * numpy.dot(self.phi_t, Z) * delta_t[:, numpy.newaxis] * delta_t[numpy.newaxis,:]
+	print "end"
+        return theta_next
+    #Gradient Descent with line search
+
+    def BFGS(self):
+
+#        updates = [
+#            (params[i], self.bfgs_min(
+#                    f=f,
+#                    x0=theta.get_value(),
+#                    fprime=fprime))]
+        of = scipy.optimize.fmin_cg 
+	of = scipy.optimize.fmin_l_bfgs_b
+	of = scipy.optimize.fmin_bfgs
+	of = self.bfgs_min
 	theta_val = of(
                     f=self.f,
                     x0=self.theta.get_value(),

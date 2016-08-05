@@ -9,7 +9,7 @@ from train import train
 import numpy as np
 import cPickle
 import scipy.io as sio
-from SurvivalAnalysis import SurvivalAnalysis
+from .SurvivalAnalysis import SurvivalAnalysis
 import theano
 import shutil
 def pickSubType(subtypesVec, subtype):

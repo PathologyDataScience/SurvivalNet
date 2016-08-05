@@ -2,7 +2,7 @@ __docformat__ = 'restructedtext en'
 
 import theano
 import theano.tensor as T
-from HiddenLayer import HiddenLayer
+from .HiddenLayer import HiddenLayer
 
 class DropoutHiddenLayer(HiddenLayer):
     def __init__(self, rng, input, n_in, n_out, is_train,

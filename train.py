@@ -1,17 +1,14 @@
-__author__ = 'Safoora'
-
 import timeit
 import sys
 import os
-from ResNetModel import ResNetModel
-from RealResNetModel import RealResNetModel
-from Model import Model
+from model import Model
 import numpy
 import theano
-from BFGS import BFGS
-from GDLS import GDLS
-from SurvivalAnalysis import SurvivalAnalysis 
-from EarlyStopping import isOverfitting
+from optimization import BFGS
+from optimization import GDLS
+from optimization import SurvivalAnalysis 
+from optimization import isOverfitting
+
 
 def train(pretrain_set, train_set, test_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
