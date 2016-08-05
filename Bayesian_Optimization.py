@@ -14,7 +14,7 @@ import theano
 
 def tune(i):
     params = {}
-    params['n_iterations'] = 1
+    params['n_iterations'] = 100
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
@@ -25,7 +25,7 @@ def tune(i):
     ub = np.array([5, 500, .9, 1, i+.5])
 
     start = clock()
-    mvalue, x_out, error = bayesopt.optimize(cost_func, n, lb, ub, params)
+    mvalue, x_out, error = bayesopt.optimize(panorg_cost_func, n, lb, ub, params)
     #layers = [1, 3, 5, 7, 9, 10]
     #hsizes = [10, 50, 100, 150, 200, 300]
     #drates = [0.0, .1, .3, .5, .7, .9]

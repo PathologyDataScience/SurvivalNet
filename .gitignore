@@ -2,6 +2,7 @@
 *.lprof
 data/
 results/
+output/
 build
 dist
 *.egg-info

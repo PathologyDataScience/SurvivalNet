@@ -17,7 +17,7 @@ def pickSubType(subtypesVec, subtype):
   return inds
 def Run():      
 #where c-index and cost function values are saved 
-  resultPath = os.path.join(os.getcwd(), './results/')
+  resultPath = os.path.join(os.getcwd(), './results/KIPAN_Gene')
   if os.path.exists(resultPath):
       shutil.rmtree(resultPath)
       os.makedirs(resultPath)
@@ -26,11 +26,11 @@ def Run():
   #where the data (possibly multiple cross validation sets) are stored
   #we use 10 permutations of the data and consequently 10 different training 
   #and testing splits to produce the results in the paper
-  p = os.path.join(os.getcwd(), 'data/LUSC_Integ.mat')
+  p = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
   D = sio.loadmat(p)
   T = np.asarray([t[0] for t in D['Survival']])
   O = 1 - np.asarray([c[0] for c in D['Censored']])
-  X = D['Integ_X']
+  X = D['Gene_X']
   # Use Bayesian Optimization for model selection, 
   #if false, manually set parameters will be used
   doBayesOpt = True
@@ -93,26 +93,6 @@ def Run():
     avg_cost += cindex_test[-1]
     print expID , ' ',   cindex_test[-1],  'average = ',avg_cost/i
   ## write output to file
-  #outputFileName = os.path.join(resultPath, expID  + 'ci_tst')
-  #f = file(outputFileName, 'wb')
-  #cPickle.dump(cindex_test, f, protocol=cPickle.HIGHEST_PROTOCOL)
-  #f.close()
-
-  #outputFileName = os.path.join(resultPath, expID  + 'ci_trn')
-  #f = file(outputFileName, 'wb')
-  #cPickle.dump(cindex_train, f, protocol=cPickle.HIGHEST_PROTOCOL)
-  #f.close()
-
-  #outputFileName = os.path.join(resultPath , expID  + 'lpl_trn')
-  #f = file(outputFileName, 'wb')
-  #cPickle.dump(train_cost_list, f, protocol=cPickle.HIGHEST_PROTOCOL)
-  #f.close()
-
-  #outputFileName = os.path.join(resultPath, expID  + 'lpl_tst')
-  #f = file(outputFileName, 'wb')
-  #cPickle.dump(test_cost_list, f, protocol=cPickle.HIGHEST_PROTOCOL)
-  #f.close()
-
   #outputFileName = os.path.join(resultPath, expID  + 'final_model')
   #f = file(outputFileName, 'wb')
   #cPickle.dump(model, f, protocol=cPickle.HIGHEST_PROTOCOL)

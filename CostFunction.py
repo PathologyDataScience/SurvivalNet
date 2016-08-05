@@ -6,12 +6,10 @@ from survivalnet.optimization import SurvivalAnalysis
 import theano
 import shutil
 def panorg_cost_func(params):
-    panorgan = False
+    panorgan = True
     n_layers = int(params[0])
     n_hidden = int(params[1])
     do_rate = params[2]
-    #reg1 = params[3]
-    #reg2 = params[4]
     if params[3] > .5:
         nonlin = theano.tensor.nnet.relu
     else: nonlin = np.tanh
@@ -22,22 +20,22 @@ def panorg_cost_func(params):
     parstr = 'nl' + str(params[0]) + '-' + 'hs' + str(params[1]) + '-' + 'dor' + str(params[2]) + str(params[3]) +'-id' + str(params[4])       
     print parstr 
    ## PARSET 
-    path_br = 'data/panorgan/BRCA_Gene.mat'
-    path_ov = 'data/panorgan/OV_Gene.mat'
+    path_br = 'data/panorgan/BRCA_Integ.mat'
+    path_ov = 'data/panorgan/OV_Integ.mat'
     opt = 'GDLS'    
     pretrain_config = None         #No pre-training 
     pretrain_set = None         #No pre-training 
     avg_cost = 0.0 
     D_br = sio.loadmat(path_br)
     D_ov = sio.loadmat(path_ov)
-    T_ov = np.asarray([t[0] for t in D_ov['Gene_Survival']])
-    O_ov = 1 - np.asarray([c[0] for c in D_ov['Gene_Censored']])
+    T_ov = np.asarray([t[0] for t in D_ov['Integ_Survival']])
+    O_ov = 1 - np.asarray([c[0] for c in D_ov['Integ_Censored']])
     ## PARSET 
-    X_ov = D_ov['Gene_X']
-    T_br = np.asarray([t[0] for t in D_br['Gene_Survival']])
-    O_br = 1 - np.asarray([c[0] for c in D_br['Gene_Censored']])
+    X_ov = D_ov['Integ_X']
+    T_br = np.asarray([t[0] for t in D_br['Integ_Survival']])
+    O_br = 1 - np.asarray([c[0] for c in D_br['Integ_Censored']])
     ## PARSET 
-    X_br = D_br['Gene_X']
+    X_br = D_br['Integ_X']
     prng = np.random.RandomState(i)
     order = prng.permutation(np.arange(len(X_br)))
     X_br = X_br[order]
@@ -76,20 +74,18 @@ def cost_func(params):
     n_layers = int(params[0])
     n_hidden = int(params[1])
     do_rate = params[2]
-    #reg1 = params[3]
-    #reg2 = params[4]
     if params[3] > .5:
         nonlin = theano.tensor.nnet.relu
     else: nonlin = np.tanh
     i = int(params[4])
     ## PARSET 
-    path = os.path.join(os.getcwd(), 'data/LUSC_Integ.mat')
+    path = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
     pretrain_config = None         #No pre-training 
     X = sio.loadmat(path)
     T = np.asarray([t[0] for t in X['Survival']])
     O = 1 - np.asarray([c[0] for c in X['Censored']])
     ## PARSET 
-    X = X['Integ_X']
+    X = X['Gene_X']
     prng = np.random.RandomState(int(i))
     order = prng.permutation(np.arange(len(X)))
     X = X[order]
