@@ -1,9 +1,10 @@
-import timeit
-import sys
-import os
-from model import Model
 import numpy
+import os
+import sys
 import theano
+import timeit
+
+from model import Model
 from optimization import BFGS
 from optimization import GDLS
 from optimization import SurvivalAnalysis 
