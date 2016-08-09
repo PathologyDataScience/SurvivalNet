@@ -13,30 +13,30 @@ import theano
 import shutil
 
 def Run():      
-  panorg = True
+  panorg = False
   #where c-index and cost function values are saved 
-  resultPath = os.path.join(os.getcwd(), 'results/panorgan/OVBRCA_Integ/')
+  resultPath = os.path.join(os.getcwd(), 'results/final/BRCA_Gene/')
   if os.path.exists(resultPath):
       shutil.rmtree(resultPath)
       os.makedirs(resultPath)
   else:
       os.makedirs(resultPath)
-  path_br = 'data/panorgan/BRCA_Integ.mat'
-  path_ov = 'data/panorgan/OV_Integ.mat'
+  path_br = 'data/panorgan/BRCA_Gene.mat'
+  path_ov = 'data/panorgan/OV_Gene.mat'
   opt = 'GDLS'    
   pretrain_config = None         #No pre-training 
   pretrain_set = None         #No pre-training 
   avg_cost = 0.0 
   D_br = sio.loadmat(path_br)
   D_ov = sio.loadmat(path_ov)
-  T_ov = np.asarray([t[0] for t in D_ov['Integ_Survival']])
-  O_ov = 1 - np.asarray([c[0] for c in D_ov['Integ_Censored']])
+  T_ov = np.asarray([t[0] for t in D_ov['Gene_Survival']])
+  O_ov = 1 - np.asarray([c[0] for c in D_ov['Gene_Censored']])
   ## PARSET 
-  X_ov = D_ov['Integ_X']
-  T_br = np.asarray([t[0] for t in D_br['Integ_Survival']])
-  O_br = 1 - np.asarray([c[0] for c in D_br['Integ_Censored']])
+  X_ov = D_ov['Gene_X']
+  T_br = np.asarray([t[0] for t in D_br['Gene_Survival']])
+  O_br = 1 - np.asarray([c[0] for c in D_br['Gene_Censored']])
   ## PARSET 
-  X_br = D_br['Integ_X']
+  X_br = D_br['Gene_X']
   
   # Use Bayesian Optimization for model selection, 
   #if false ,manually set parameters will be used

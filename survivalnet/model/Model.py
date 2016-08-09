@@ -10,6 +10,7 @@ from .HiddenLayer import HiddenLayer
 from .DropoutHiddenLayer import DropoutHiddenLayer
 from .SparseDenoisingAutoencoder import SparseDenoisingAutoencoder as dA
 from survivalnet.optimization import Optimization as Opt
+from theano.compile.nanguardmode import NanGuardMode
 
 
 class Model(object):
@@ -200,17 +201,12 @@ class Model(object):
             },
             name='forward'
         )
-        
-
         return forward, backward
 
     def reset_weight(self, params):
         for i in xrange(self.n_layers):
             self.hidden_layers[i].reset_weight((params[2*i], params[2*i+1]))
         self.riskLayer.reset_weight(params[-1])
- 
-#    def reset_weight(self, params, i):
-#        self.hidden_layers[i].reset_weight(params, i)
        
     def reset_weight_by_rate(self, rate):
         for i in xrange(self.n_layers):
