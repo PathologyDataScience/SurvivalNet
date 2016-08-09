@@ -12,6 +12,7 @@ import numpy
 import theano.tensor as T
 import scipy
 from .LineSearch import line_search_wolfe1, line_search_wolfe2, LineSearchWarning, _LineSearchError
+from theano.compile.nanguardmode import NanGuardMode
 
 def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
                          **kwargs):
@@ -64,11 +65,13 @@ class GDLS(object):
                                    inputs=[is_tr],
                                    outputs = T.grad(self.cost(o, atrisk), self.params),
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
+#                                   mode = NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True),
                                    name='gradient')
         self.cost_func = theano.function(on_unused_input='ignore',
                                    inputs=[is_tr],
                                    outputs = self.cost(o, atrisk),
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
+#                                   mode = NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True),
                                    name='cost_func')   
             
     #@profile

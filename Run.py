@@ -17,7 +17,7 @@ def pickSubType(subtypesVec, subtype):
   return inds
 def Run():      
 #where c-index and cost function values are saved 
-  resultPath = os.path.join(os.getcwd(), './results/KIPAN_Gene')
+  resultPath = os.path.join(os.getcwd(), './results/final/Brain_Integ')
   if os.path.exists(resultPath):
       shutil.rmtree(resultPath)
       os.makedirs(resultPath)
@@ -26,11 +26,12 @@ def Run():
   #where the data (possibly multiple cross validation sets) are stored
   #we use 10 permutations of the data and consequently 10 different training 
   #and testing splits to produce the results in the paper
-  p = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
+  p = os.path.join(os.getcwd(), 'data/Brain_Integ.mat')
   D = sio.loadmat(p)
   T = np.asarray([t[0] for t in D['Survival']])
   O = 1 - np.asarray([c[0] for c in D['Censored']])
-  X = D['Gene_X']
+  X = D['Integ_X']
+  #X = (X - np.min(X, axis = 0))/(np.max(X, axis = 0) - np.min(X, axis=0))
   # Use Bayesian Optimization for model selection, 
   #if false, manually set parameters will be used
   doBayesOpt = True
@@ -51,8 +52,8 @@ def Run():
       do_rate = bo_params[2]
       nonlin = theano.tensor.nnet.relu if bo_params[3]>.5 else np.tanh
     else:
-      n_layers = 1
-      n_hidden = 67
+      n_layers = 2
+      n_hidden = 500
       do_rate = .35
       #nonlin = theano.tensor.nnet.relu
       nonlin = np.tanh 

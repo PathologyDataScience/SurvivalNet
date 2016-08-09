@@ -6,7 +6,7 @@ from survivalnet.optimization import SurvivalAnalysis
 import theano
 import shutil
 def panorg_cost_func(params):
-    panorgan = True
+    panorgan = False
     n_layers = int(params[0])
     n_hidden = int(params[1])
     do_rate = params[2]
@@ -79,13 +79,13 @@ def cost_func(params):
     else: nonlin = np.tanh
     i = int(params[4])
     ## PARSET 
-    path = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
+    path = os.path.join(os.getcwd(), 'data/Brain_Integ.mat')
     pretrain_config = None         #No pre-training 
     X = sio.loadmat(path)
     T = np.asarray([t[0] for t in X['Survival']])
     O = 1 - np.asarray([c[0] for c in X['Censored']])
     ## PARSET 
-    X = X['Gene_X']
+    X = X['Integ_X']
     prng = np.random.RandomState(int(i))
     order = prng.permutation(np.arange(len(X)))
     X = X[order]
@@ -123,5 +123,5 @@ def cost_func(params):
 #def st_cost_func(params):
 
 if __name__ == '__main__':
-        res = cost_func([1.0,10.0,0.0,0.0,0.34])
+        res = cost_func([4.0,38.0,0.01,0.6,0.64])
 	print res

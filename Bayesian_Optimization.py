@@ -25,7 +25,7 @@ def tune(i):
     ub = np.array([5, 500, .9, 1, i+.5])
 
     start = clock()
-    mvalue, x_out, error = bayesopt.optimize(panorg_cost_func, n, lb, ub, params)
+    mvalue, x_out, error = bayesopt.optimize(cost_func, n, lb, ub, params)
     #layers = [1, 3, 5, 7, 9, 10]
     #hsizes = [10, 50, 100, 150, 200, 300]
     #drates = [0.0, .1, .3, .5, .7, .9]

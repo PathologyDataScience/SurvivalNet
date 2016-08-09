@@ -49,7 +49,6 @@ class HiddenLayer(object):
             )
             if activation == T.nnet.sigmoid:
                 W_values *= 4
-                print W_values
             W = theano.shared(value=W_values, name='W', borrow=True)
 
         if b is None:

@@ -23,9 +23,9 @@ def scalar_search_wolfe1(phi, derphi, phi0=None, old_phi0=None, derphi0=None,
         derphi0 = derphi(0.)
 
     if old_phi0 is not None and derphi0 != 0:
-        alpha1 = min(1.0, 1.01*2*(phi0 - old_phi0)/derphi0)
+        alpha1 = min(.01, 1.01*2*(phi0 - old_phi0)/derphi0)
         if alpha1 < 0:
-            alpha1 = 1.0
+            alpha1 = .01
     else:
         alpha1 = .01
 
@@ -41,7 +41,6 @@ def scalar_search_wolfe1(phi, derphi, phi0=None, old_phi0=None, derphi0=None,
         stp, phi1, derphi1, task = minpack2.dcsrch(alpha1, phi1, derphi1,
                                                    c1, c2, xtol, task,
                                                    amin, amax, isave, dsave)
-        #print "alpha1 = ", alpha1 
         
         if task[:2] == b'FG':
             alpha1 = stp
@@ -256,7 +255,7 @@ def scalar_search_wolfe2(phi, derphi=None, phi0=None,
 
     alpha0 = 0
     if old_phi0 is not None and derphi0 != 0:
-        alpha1 = min(1.0, 1.01*2*(phi0 - old_phi0)/derphi0)
+        alpha1 = min(.01, 1.01*2*(phi0 - old_phi0)/derphi0)
     else:
         alpha1 = .01
 
@@ -281,7 +280,6 @@ def scalar_search_wolfe2(phi, derphi=None, phi0=None,
     i = 1
     maxiter = 10
     for i in xrange(maxiter):
-        #print "alpha2 = ", alpha1
                 
         if alpha1 == 0:
             break
