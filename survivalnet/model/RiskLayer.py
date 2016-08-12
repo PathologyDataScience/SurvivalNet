@@ -15,7 +15,6 @@ class RiskLayer(object):
                     high=numpy.sqrt(6. / (n_in + n_out)),
                     size=(n_in, n_out)
                 ),
-                # rng.normal(size=(n_in, n_out)),
                 dtype=theano.config.floatX
             ),
             name='W',
