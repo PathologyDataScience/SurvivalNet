@@ -29,7 +29,7 @@ def Visualize(Model, Features, Symbols, N=30):
     N : integer
     Number of features to analyze.
     """
-    
+
     # modify duplicate symbols where needed - append index to each instance
     Prefix = [Symbol[0:str.rfind(str(Symbol), '_')] for Symbol in Symbols]
     Suffix = [Symbol[str.rfind(str(Symbol), '_'):] for Symbol in Symbols]
@@ -52,7 +52,11 @@ def Visualize(Model, Features, Symbols, N=30):
     RankedBar(Gradients, Symbols, N)
 
     # generate ranked box plot series
-    RankedBar(Gradients, Symbols, N)
+    RankedBox(Gradients, Symbols, N)
+
+    # generate paired scatter plot
+    PairScatter(Gradients, Symbols, N)
+
 
 def RankedBar(Gradients, Symbols, N=30):
     """
@@ -76,7 +80,7 @@ def RankedBar(Gradients, Symbols, N=30):
     if(Gradients.shape[0] > 1):
         Mean = np.asarray(np.mean(Gradients, axis=0))
         Std = np.asarray(np.std(Gradients, axis=0))
-        data = zip(Symbols, Mean[0], Std[0])
+        data = zip(Symbols, Mean, Std)
     else:
         data = zip(Symbols, np.asarray(Gradients)[0])
 
@@ -126,7 +130,7 @@ def RankedBox(Gradients, Symbols, N=30):
     """
 
     # generate mean values
-    Means = np.asarray(np.mean(Gradients, axis=0))[0]
+    Means = np.asarray(np.mean(Gradients, axis=0))
 
     # generate colors
     Colors = [Red if mean > 0 else Blue for mean in Means]
@@ -171,8 +175,8 @@ def PairScatter(Gradients, Symbols, N=30):
     """
 
     # calculate means, standard deviations
-    Means = np.asarray(np.mean(Gradients, axis=0))[0]
-    Std = np.asarray(np.std(Gradients, axis=0))[0]
+    Means = np.asarray(np.mean(Gradients, axis=0))
+    Std = np.asarray(np.std(Gradients, axis=0))
 
     # zip data
     data = zip(Symbols, Means, Std, list(np.array(Gradients).transpose()))
