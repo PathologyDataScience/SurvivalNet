@@ -184,16 +184,25 @@ def PairScatter(Gradients, Symbols, N=30):
     # sort by mean gradient for cohorts, gradient for individual samples
     data = sorted(data, key=lambda x: np.abs(x[1]), reverse=True)
 
-    # generate layout for subplots
-    Figure = py.tools.make_subplots(rows=N, cols=N)
+    # generate subplot titles
+    Titles = [data[0][0]]
+    for i in np.arange(1, N):
+        for j in np.arange(N):
+            Titles.append("")
+        Titles.append(data[i][0])
+    Titles = tuple(Titles)
 
-    # layout subplots
+    # generate subplot matrix
+    Figure = py.tools.make_subplots(rows=N, cols=N, subplot_titles=Titles)
+
+    # generate individual subplots
     for i in np.arange(N):
 
         # append scatter plot for each variable pair
         for j in np.arange(i):
             Figure.append_trace(go.Scatter(x=data[i][3] / data[i][2],
                                            y=data[j][3] / data[j][2],
+                                           text=str(1.0),
                                            mode='markers',
                                            marker=dict(color='grey',
                                                        size=1)),
@@ -204,6 +213,87 @@ def PairScatter(Gradients, Symbols, N=30):
                                                     Std[i]).squeeze(),
                                          marker=dict(color='red')),
                             i+1, i+1)
+
+    for i in np.arange(N):
+
+        # append scatter plot for each variable pair
+        for j in np.arange(i+1, N):
+            rho = np.sum(((data[i][3] - data[i][1]) / data[i][2]) * \
+                        ((data[j][3] - data[j][1]) / data[j][2]))
+
+            Figure.append_trace(go.Scatter(x=[],
+                                           y=[],
+                                           text=str(rho),
+                                           mode='markers',
+                                           marker=dict(color='grey',
+                                                       size=1)),
+                                i+1, j+1)
+
+        # add histograms on diagonal
+        Figure.append_trace(go.Histogram(x=np.array(Gradients[:, i] /
+                                                    Std[i]).squeeze(),
+                                         marker=dict(color='red')),
+                            i+1, i+1)
+
+    # perform layouts for individual subtypes
+    for i in np.arange(N):
+        for j in np.arange(N):
+
+            Index = i*N + j + 1
+
+            if (j < i):
+
+                # calculate index of lower triangular plot
+                Index = i*N + j + 1
+
+                # update x,y axis layout for scatter plots
+                Figure['layout']['xaxis'+str(Index)].update(autorange=True,
+                                                            showgrid=False,
+                                                            zeroline=False,
+                                                            showline=True,
+                                                            autotick=True,
+                                                            ticks='',
+                                                            showticklabels=False,
+                                                            linecolor='#636363',
+                                                            linewidth=1)
+                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
+                                                            showgrid=False,
+                                                            zeroline=False,
+                                                            showline=True,
+                                                            autotick=True,
+                                                            ticks='',
+                                                            showticklabels=False,
+                                                            linecolor='#636363',
+                                                            linewidth=1)
+
+            elif j == i:
+
+                # update histogram layouts
+                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
+                                                            showgrid=False,
+                                                            zeroline=False,
+                                                            showline=False,
+                                                            autotick=True,
+                                                            ticks='',
+                                                            showticklabels=False)
+
+            else:
+
+                # update x,y axis layout for scatter plots
+                Figure['layout']['xaxis'+str(Index)].update(autorange=True,
+                                                            showgrid=False,
+                                                            zeroline=False,
+                                                            showline=False,
+                                                            autotick=True,
+                                                            ticks='',
+                                                            showticklabels=False)
+                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
+                                                            showgrid=False,
+                                                            zeroline=False,
+                                                            showline=False,
+                                                            autotick=True,
+                                                            ticks='',
+                                                            showticklabels=False)
 
     # generate plot
     py.offline.plot(Figure, filename='PairScatter')
