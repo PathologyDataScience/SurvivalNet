@@ -1,5 +1,5 @@
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 
@@ -25,7 +25,7 @@ setup(name='survivalnet',
       author='Emory University',
       author_email='lee.cooper@emory.edu',
       url='https://github.com/cooperlab/SurvivalNet',
-      packages=['survivalnet'],
+      packages=find_packages(),
       package_dir={'survivalnet': 'survivalnet'},
       include_package_data=True,
       install_requires=requirements,
