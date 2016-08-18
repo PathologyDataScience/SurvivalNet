@@ -8,7 +8,7 @@ from . import model
 from .train import train
 
 # sub-packages with no internal dependencies
-from . import analysis
+from . import sensitivity
 
 # must be imported before Bayesian_Optimizaiton
 #from .CostFunction import cost_func, aggr_st_cost_func, st_cost_func
@@ -26,5 +26,5 @@ __all__ = (
     # sub-packages
     'model',
     'optimization',
-    'analysis',
+    'sensitivity',
 )
