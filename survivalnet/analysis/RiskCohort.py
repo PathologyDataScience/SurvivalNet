@@ -36,9 +36,12 @@ def RiskCohort(Model, Features):
     # initialize container for risk gradient profiles
     Gradients = np.zeros(Features.shape)
 
+    # copy input to matrix for Theano
+    Matrix = np.matrix(Features)
+
     # iterate through samples, calculating risk gradient profile for each
     for i in np.arange(Features.shape[0]):
-        Gradients[i, :] = _RiskBackpropagate(Model, Features[i, :])
+        Gradients[i, :] = _RiskBackpropagate(Model, Matrix[i, :])
 
     return Gradients
 
