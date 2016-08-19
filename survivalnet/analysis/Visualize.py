@@ -35,7 +35,7 @@ SURV_FH = 6
 
 
 def Visualize(Model, Normalized, Raw, Symbols, Survival, Censored,
-              GeneSet=False, N=30, Tau=0.05, Path=None):
+              N=10, Tau=0.05, Path=None):
     """
     Generate visualizations of risk profiles. Backpropagation is used to
 
@@ -72,21 +72,27 @@ def Visualize(Model, Normalized, Raw, Symbols, Survival, Censored,
             Corrected[i] = Prefix[i] + Suffix[i]
 
     # generate risk derivative profiles for cohort
+    print "Generting risk gradient profiles..."
     Gradients = RiskCohort(Model, Normalized)
 
     # generate ranked box plot series
+    print "Generating risk gradient boxplot..."
     RBFig = RankedBox(Gradients, Symbols, N)
 
     # generate paired scatter plot
+    print "Generating paired scatter plots..."
     PSFig = PairScatter(Gradients, Symbols, N)
 
     # generate cluster plot
+    print "Generating cluster analysis..."
     CFig = RiskCluster(Gradients, Raw, Symbols, N, Tau)
 
     # generate Kaplan-Meier plots for individual features
+    print "Generating Kaplan-Meier plots..."
     KMFigs, KMNames = KMPlots(Raw, Symbols, Survival, Censored, N)
 
     # save figures
+    print "Saving figures..."
     if Path is not None:
 
         # save standard figures
