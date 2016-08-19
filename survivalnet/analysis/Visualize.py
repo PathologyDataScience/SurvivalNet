@@ -1,15 +1,41 @@
+from lifelines import KaplanMeierFitter
+import matplotlib.pyplot as plt
 import numpy as np
-import plotly as py
-import plotly.graph_objs as go
+from statsmodels.nonparametric.smoothers_lowess import lowess
+from textwrap import wrap
 
 from . import RiskCohort
+from . import RiskCluster
 
 # define colors for positive risk (red) and negative risk (blue)
-Red = 'rgba(222,45,38,0.8)'
-Blue = 'rgb(49,130,189)'
+REDFACE = '#DE2D26'
+BLUEFACE = '#3182BD'
+REDEDGE = '#DE2D26'
+BLUEEDGE = '#3182BD'
+MEDIAN = '#000000'
+WHISKER = '#AAAAAA'
+POINTS = '#000000'
+GRID = '#BBBBBB'
+
+# layout constants general
+WRAP = 20  # number of characters for text wrapping
+SPACING = 0.2  # margin
+
+# layout constants for boxplot
+BOX_FH = 4  # boxplot figure width
+BOX_FW = 8  # boxplot figure height
+JITTER = 0.08
+
+# layout constants for pairwise feature plot
+PAIR_FW = 10
+
+# layout constants for survival plot
+SURV_FW = 6
+SURV_FH = 6
 
 
-def Visualize(Model, Features, Symbols, N=30):
+def Visualize(Model, Normalized, Raw, Symbols, Survival, Censored,
+              GeneSet=False, N=30, Tau=0.05, Path=None):
     """
     Generate visualizations of risk profiles. Backpropagation is used to
 
@@ -46,69 +72,29 @@ def Visualize(Model, Features, Symbols, N=30):
             Corrected[i] = Prefix[i] + Suffix[i]
 
     # generate risk derivative profiles for cohort
-    Gradients = RiskCohort(Model, Features)
-
-    # generate ranked bar chart
-    RankedBar(Gradients, Symbols, N)
+    Gradients = RiskCohort(Model, Normalized)
 
     # generate ranked box plot series
-    RankedBox(Gradients, Symbols, N)
+    RBFig = RankedBox(Gradients, Symbols, N)
 
     # generate paired scatter plot
-    PairScatter(Gradients, Symbols, N)
+    PSFig = PairScatter(Gradients, Symbols, N)
 
+    # generate cluster plot
+    CFig = RiskCluster(Gradients, Raw, Symbols, N, Tau)
 
-def RankedBar(Gradients, Symbols, N=30):
-    """
-    Generates bar chart of feature gradients ranked by absolute magnitude.
+    # generate Kaplan-Meier plots for individual features
+    KMFigs, KMNames = KMPlots(Raw, Symbols, Survival, Censored, N)
 
-    Parameters:
-    ----------
+    # save figures
+    if Path is not None:
 
-    Risk_Gradients: numpy matrix
-    a matrix containing feature weights.
-
-    Symbols: numpy nd array
-    a matrix of feature Symbols.
-
-    N: integer value
-    number of featurs to display in barchart.
-
-    """
-
-    # calculate means, standard deviations if multiple sample provided
-    if(Gradients.shape[0] > 1):
-        Mean = np.asarray(np.mean(Gradients, axis=0))
-        Std = np.asarray(np.std(Gradients, axis=0))
-        data = zip(Symbols, Mean, Std)
-    else:
-        data = zip(Symbols, np.asarray(Gradients)[0])
-
-    # sort by mean gradient for cohorts, gradient for individual samples
-    data = sorted(data, key=lambda x: np.abs(x[1]), reverse=True)
-
-    # generate variables for visualization
-    if(Gradients.shape[1] > 1):
-        Means = [X[1] for X in data[0:N]]
-        Stdevs = [X[2] for X in data[0:N]]
-        Colors = [Red if X[1] > 0 else Blue for X in data[0:N]]
-        Labels = [X[0] for X in data[0:N]]
-    else:
-        Values = [X[1] for X in data[0:N]]
-        Colors = [Red if X[1] > 0 else Blue for X in data[0:N]]
-        Labels = [X[0] for X in data[0:N]]
-
-    # generate plot
-    if(Gradients.shape[1] > 1):
-        trace = [go.Bar(x=Labels, y=Means, type='bar',
-                 error_y=dict(type='data', array=Stdevs, visible=True),
-                 name='Risk Gradient',
-                 marker=dict(color=Colors))]
-    else:
-        trace = [go.Bar(x=Labels, y=Values, type='bar',
-                 name='Risk Gradient',
-                 marker=dict(color=Colors))]
-    py.offline.plot(trace, filename='RankedBar')
+        # save standard figures
+        RBFig.savefig(Path + 'RankedBox.pdf')
+        PSFig.savefig(Path + 'PairedScatter.pdf')
+        CFig.savefig(Path + 'Heatmap.pdf')
+        for i, Figure in enumerate(KMFigs):
+            Figure.savefig(Path + 'KM.' + KMNames[i] + '.pdf')
 
 
 def RankedBox(Gradients, Symbols, N=30):
@@ -118,7 +104,7 @@ def RankedBox(Gradients, Symbols, N=30):
     Parameters:
     ----------
 
-    Risk_Gradients: numpy matrix
+    Gradients: numpy matrix
     a matrix containing feature weights.
 
     Symbols: numpy nd array
@@ -127,33 +113,71 @@ def RankedBox(Gradients, Symbols, N=30):
     N: integer value
     number of featurs to display in barchart.
 
+    Returns
+    -------
+    Figure : figure handle
+        Handle to figure used for saving image to disk i.e.
+        Figure.savefig('heatmap.pdf')
     """
 
     # generate mean values
     Means = np.asarray(np.mean(Gradients, axis=0))
 
-    # generate colors
-    Colors = [Red if mean > 0 else Blue for mean in Means]
+    # sort features by mean absolute gradient
+    Order = np.argsort(-np.abs(Means))
 
-    # zip data
-    data = zip(Symbols, Means, Colors, list(np.array(Gradients).transpose()))
+    # generate figure and add axes
+    Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
+    Axes = Figure.add_axes([SPACING, SPACING, 1-2*SPACING, 1-2*SPACING],
+                           frame_on=False)
+    Axes.set_axis_bgcolor('white')
 
-    # sort by mean gradient for cohorts, gradient for individual samples
-    data = sorted(data, key=lambda x: np.abs(x[1]), reverse=True)
+    # generate boxplots
+    Box = Axes.boxplot(Gradients[:, Order[0:N]],
+                       patch_artist=True,
+                       showfliers=False)
 
-    # generate boxplot traces
-    Traces = []
-    for Symbol, Mean, Color, Points in data[0:N]:
-        Traces.append(go.Box(y=Points,
-                             name=Symbol,
-                             jitter=0.5,
-                             whiskerwidth=0.2,
-                             boxpoints='all',
-                             fillcolor=Color,
-                             marker=dict(size=1, color=Color),
-                             line=dict(width=1),))
+    # set global properties
+    plt.setp(Box['medians'], color=MEDIAN, linewidth=1)
+    plt.setp(Box['whiskers'], color=WHISKER, linewidth=1, linestyle='-')
+    plt.setp(Box['caps'], color=WHISKER, linewidth=1)
 
-    py.offline.plot(Traces, filename='RankedBox')
+    # modify box styling
+    for i, box in enumerate(Box['boxes']):
+        if Means[Order[i]] <= 0:
+            box.set(color=BLUEEDGE, linewidth=2)
+            box.set(facecolor=BLUEFACE)
+        else:
+            box.set(color=REDEDGE, linewidth=2)
+            box.set(facecolor=REDFACE)
+
+    # add jittered data overlays
+    for i in np.arange(N):
+        plt.scatter(np.random.normal(i+1, JITTER, size=Gradients.shape[0]),
+                    Gradients[:, Order[i]], color=POINTS, alpha=0.2,
+                    marker='o', s=2,
+                    zorder=100)
+
+    # set limits
+    Axes.set_ylim(1.05 * Gradients.min(), 1.05 * Gradients.max())
+
+    # format x axis
+    plt.xlabel('Model Features')
+    Fixed = _FixSymbols(Symbols)
+    Names = plt.setp(Axes, xticklabels=[Fixed[Order[i]] for i in np.arange(N)])
+    plt.setp(Names, rotation=90, fontsize=10)
+    Axes.set_xticks(np.linspace(1.5, N-0.5, N-1), minor=True)
+    Axes.xaxis.set_ticks_position('bottom')
+
+    # format y axis
+    plt.ylabel('Risk Gradient')
+    Axes.yaxis.set_ticks_position('left')
+
+    # add grid lines and zero line
+    Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
+    plt.axhline(0, color='black')
+
+    return Figure
 
 
 def PairScatter(Gradients, Symbols, N=30):
@@ -178,122 +202,242 @@ def PairScatter(Gradients, Symbols, N=30):
     Means = np.asarray(np.mean(Gradients, axis=0))
     Std = np.asarray(np.std(Gradients, axis=0))
 
-    # zip data
-    data = zip(Symbols, Means, Std, list(np.array(Gradients).transpose()))
+    # sort features by mean absolute gradient
+    Order = np.argsort(-np.abs(Means))
 
-    # sort by mean gradient for cohorts, gradient for individual samples
-    data = sorted(data, key=lambda x: np.abs(x[1]), reverse=True)
+    # generate subplots
+    Figure, Axes = plt.subplots(nrows=N, ncols=N,
+                                figsize=(PAIR_FW, PAIR_FW),
+                                facecolor='white')
+    Figure.subplots_adjust(hspace=SPACING, wspace=SPACING, bottom=SPACING)
 
-    # generate subplot titles
-    Titles = [data[0][0]]
-    for i in np.arange(1, N):
-        for j in np.arange(N):
-            Titles.append("")
-        Titles.append(data[i][0])
-    Titles = tuple(Titles)
+    # remove axes and ticks
+    for ax in Axes.flat:
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
 
-    # generate subplot matrix
-    Figure = py.tools.make_subplots(rows=N, cols=N, subplot_titles=Titles)
+    # generate scatter plots in lower triangular portion
+    for i, j in zip(*np.triu_indices_from(Axes, k=1)):
+        Axes[i, j].scatter((Gradients[:, Order[j]]-Means[Order[j]]) /
+                           Std[Order[j]],
+                           (Gradients[:, Order[i]]-Means[Order[i]]) /
+                           Std[Order[i]],
+                           color=POINTS, alpha=0.2, marker='o', s=2)
+        Smooth = lowess((Gradients[:, Order[j]]-Means[Order[j]]) /
+                        Std[Order[j]],
+                        (Gradients[:, Order[i]]-Means[Order[i]]) /
+                        Std[Order[i]])
+        Axes[i, j].plot(Smooth[:, 1], Smooth[:, 0], color='red')
 
-    # generate individual subplots
+    # generate histograms on diagonal
+    Fixed = _FixSymbols(Symbols, WRAP)
     for i in np.arange(N):
+        if Means[Order[i]] <= 0:
+            Axes[i, i].hist(Gradients[:, Order[i]],
+                            facecolor=BLUEFACE,
+                            alpha=0.8)
+        else:
+            Axes[i, i].hist(Gradients[:, Order[i]],
+                            facecolor=REDFACE,
+                            alpha=0.8)
+        Axes[i, i].annotate(Fixed[Order[i]], (0, 0),
+                            xycoords='axes fraction',
+                            ha='right', va='top',
+                            rotation=45)
 
-        # append scatter plot for each variable pair
-        for j in np.arange(i):
-            Figure.append_trace(go.Scatter(x=data[i][3] / data[i][2],
-                                           y=data[j][3] / data[j][2],
-                                           text=str(1.0),
-                                           mode='markers',
-                                           marker=dict(color='grey',
-                                                       size=1)),
-                                i+1, j+1)
+    # delete unused axes
+    for i, j in zip(*np.tril_indices_from(Axes, k=-1)):
+        Figure.delaxes(Axes[i, j])
 
-        # add histograms on diagonal
-        Figure.append_trace(go.Histogram(x=np.array(Gradients[:, i] /
-                                                    Std[i]).squeeze(),
-                                         marker=dict(color='red')),
-                            i+1, i+1)
+    return Figure
 
-    for i in np.arange(N):
 
-        # append scatter plot for each variable pair
-        for j in np.arange(i+1, N):
-            rho = np.sum(((data[i][3] - data[i][1]) / data[i][2]) * \
-                        ((data[j][3] - data[j][1]) / data[j][2]))
+def KMPlots(Raw, Symbols, Survival, Censored, N=30):
+    """
+    Generates KM plots for individual features ranked by absolute magnitude.
 
-            Figure.append_trace(go.Scatter(x=[],
-                                           y=[],
-                                           text=str(rho),
-                                           mode='markers',
-                                           marker=dict(color='grey',
-                                                       size=1)),
-                                i+1, j+1)
+    Parameters:
+    ----------
 
-        # add histograms on diagonal
-        Figure.append_trace(go.Histogram(x=np.array(Gradients[:, i] /
-                                                    Std[i]).squeeze(),
-                                         marker=dict(color='red')),
-                            i+1, i+1)
+    Gradients: numpy matrix
+    a matrix containing feature weights.
 
-    # perform layouts for individual subtypes
-    for i in np.arange(N):
-        for j in np.arange(N):
+    Symbols: numpy nd array
+    a matrix of feature Symbols.
 
-            Index = i*N + j + 1
+    N: integer value
+    number of featurs to display in barchart.
 
-            if (j < i):
+    Returns
+    -------
+    Figures : figure handle
+    List containing handles to figures.
 
-                # calculate index of lower triangular plot
-                Index = i*N + j + 1
+    Names : array_like
+    List of feature names for figures in 'Figures'
 
-                # update x,y axis layout for scatter plots
-                Figure['layout']['xaxis'+str(Index)].update(autorange=True,
-                                                            showgrid=False,
-                                                            zeroline=False,
-                                                            showline=True,
-                                                            autotick=True,
-                                                            ticks='',
-                                                            showticklabels=False,
-                                                            linecolor='#636363',
-                                                            linewidth=1)
-                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
-                                                            showgrid=False,
-                                                            zeroline=False,
-                                                            showline=True,
-                                                            autotick=True,
-                                                            ticks='',
-                                                            showticklabels=False,
-                                                            linecolor='#636363',
-                                                            linewidth=1)
+    Notes
+    -----
+    Note this uses feature values as opposed to back-propagated risk gradients.
+    """
 
-            elif j == i:
+    # initialize list of figures and names
+    Figures = []
+    Names = []
 
-                # update histogram layouts
-                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
-                                                            showgrid=False,
-                                                            zeroline=False,
-                                                            showline=False,
-                                                            autotick=True,
-                                                            ticks='',
-                                                            showticklabels=False)
+    # generate mean values
+    Means = np.asarray(np.mean(Raw, axis=0))
+
+    # sort features by mean absolute gradient
+    Order = np.argsort(-np.abs(Means))
+
+    # generate Kaplan Meier fitter
+    kmf = KaplanMeierFitter()
+
+    # generate KM plot for each feature
+    for count, i in enumerate(Order[0:N]):
+
+        # generate figure and axes
+        Figures.append(plt.figure(figsize=(SURV_FW, SURV_FH),
+                                  facecolor='white'))
+        Axes = Figures[count].add_axes([SPACING, SPACING,
+                                        1-2*SPACING, 1-2*SPACING])
+
+        # generate names
+        Names.append(Symbols[i])
+
+        # extract suffix to classify feature
+        Suffix = Symbols[i][str.rfind(str(Symbols[i]), '_'):].strip()
+
+        if Suffix == '_Clinical':
+
+            # get unique values to determine if binary or continuous
+            Unique = np.unique(Raw[:, i])
+
+            # process based on variable type
+            if Unique.size == 2:
+
+                # extract and plot mutant and wild-type survival profiles
+                kmf.fit(Survival[Raw[:, i] == Unique[0]],
+                        Censored[Raw[:, i] == Unique[0]] == 1,
+                        label=Symbols[i] + str(Unique[0]))
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] == Unique[1]],
+                        Censored[Raw[:, i] == Unique[1]] == 1,
+                        label=Symbols[i] + str(Unique[1]))
+                kmf.plot(ax=Axes)
+                plt.ylim(0, 1)
 
             else:
 
-                # update x,y axis layout for scatter plots
-                Figure['layout']['xaxis'+str(Index)].update(autorange=True,
-                                                            showgrid=False,
-                                                            zeroline=False,
-                                                            showline=False,
-                                                            autotick=True,
-                                                            ticks='',
-                                                            showticklabels=False)
-                Figure['layout']['yaxis'+str(Index)].update(autorange=True,
-                                                            showgrid=False,
-                                                            zeroline=False,
-                                                            showline=False,
-                                                            autotick=True,
-                                                            ticks='',
-                                                            showticklabels=False)
+                # determine median value
+                Median = np.median(Raw[:, i])
 
-    # generate plot
-    py.offline.plot(Figure, filename='PairScatter')
+                # extract and altered and unaltered survival profiles
+                kmf.fit(Survival[Raw[:, i] > Median],
+                        Censored[Raw[:, i] > Median] == 1,
+                        label=Symbols[i] + " > " + str(Median))
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] <= Median],
+                        Censored[Raw[:, i] <= Median] == 1,
+                        label=Symbols[i] + " <= " + str(Median))
+                kmf.plot(ax=Axes)
+                plt.ylim(0, 1)
+
+        elif Suffix == '_Mut':
+
+            # extract and plot mutant and wild-type survival profiles
+            kmf.fit(Survival[Raw[:, i] == 1],
+                    Censored[Raw[:, i] == 1] == 1,
+                    label=Symbols[i] + " Mutant")
+            kmf.plot(ax=Axes)
+            kmf.fit(Survival[Raw[:, i] == 0],
+                    Censored[Raw[:, i] == 0] == 1,
+                    label=Symbols[i] + " Mutant")
+            kmf.plot(ax=Axes)
+            plt.ylim(0, 1)
+
+        elif Suffix == '_CNV':
+
+            # determine if alteration is amplification or deletion
+            Amplified = np.mean(Raw[:, i]) > 0
+
+            # extract and plot altered and unaltered survival profiles
+            if Amplified:
+                kmf.fit(Survival[Raw[:, i] > 0],
+                        Censored[Raw[:, i] > 0] == 1,
+                        label=Symbols[i] + " Amplified")
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] <= 0],
+                        Censored[Raw[:, i] <= 0] == 1,
+                        label=Symbols[i] + " not Amplified")
+                kmf.plot(ax=Axes)
+            else:
+                kmf.fit(Survival[Raw[:, i] < 0],
+                        Censored[Raw[:, i] < 0] == 1,
+                        label=Symbols[i] + " Deleted")
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] >= 0],
+                        Censored[Raw[:, i] >= 0] == 1,
+                        label=Symbols[i] + " not Deleted")
+                kmf.plot(ax=Axes)
+            plt.ylim(0, 1)
+
+        elif Suffix == '_CNVArm':
+
+            # determine if alteration is amplification or deletion
+            Amplified = np.mean(Raw[:, i]) > 0
+
+            # extract and plot altered and unaltered survival profiles
+            if Amplified:
+                kmf.fit(Survival[Raw[:, i] > 0.25],
+                        Censored[Raw[:, i] > 0.25] == 1,
+                        label=Symbols[i] + " Amplified")
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] <= 0.25],
+                        Censored[Raw[:, i] <= 0.25] == 1,
+                        label=Symbols[i] + " not Amplified")
+                kmf.plot(ax=Axes)
+            else:
+                kmf.fit(Survival[Raw[:, i] < -0.25],
+                        Censored[Raw[:, i] < -0.25] == 1,
+                        label=Symbols[i] + " Deleted")
+                kmf.plot(ax=Axes)
+                kmf.fit(Survival[Raw[:, i] >= -0.25],
+                        Censored[Raw[:, i] >= -0.25] == 1,
+                        label=Symbols[i] + " not Deleted")
+                kmf.plot(ax=Axes)
+            plt.ylim(0, 1)
+
+        elif (Suffix == '_Protein') or (Suffix == '_mRNA'):
+
+            # determine median expression
+            Median = np.median(Raw[:, i])
+
+            # extract and altered and unaltered survival profiles
+            kmf.fit(Survival[Raw[:, i] > Median],
+                    Censored[Raw[:, i] > Median] == 1,
+                    label=Symbols[i] + " Higher Expression")
+            kmf.plot(ax=Axes)
+            kmf.fit(Survival[Raw[:, i] <= Median],
+                    Censored[Raw[:, i] <= Median] == 1,
+                    label=Symbols[i] + " Lower Expression")
+            kmf.plot(ax=Axes)
+            plt.ylim(0, 1)
+
+        else:
+            raise ValueError('Unrecognized feature type')
+
+    return Figures, Names
+
+
+def _FixSymbols(Symbols, Length=WRAP):
+    """
+    Removes trailing and leading whitespace and wraps long labels
+    """
+
+    # remove whitespace and wrap
+    Fixed = ['\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
+             for Symbol in Symbols]
+
+    return Fixed
