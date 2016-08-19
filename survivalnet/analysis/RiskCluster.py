@@ -1,5 +1,5 @@
 import matplotlib as mpl
-import matplotlib.pyplot as pylab
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as dist
@@ -85,7 +85,7 @@ def RiskCluster(Gradients, Raw, Symbols, N=30, Tau=0.05):
     Normalized = Normalized.transpose()
 
     # generate figure
-    Figure = pylab.figure(figsize=(WINDOW_WIDTH, WINDOW_HEIGHT))
+    Figure = plt.figure(figsize=(WINDOW_WIDTH, WINDOW_HEIGHT))
 
     # cluster samples and generate dendrogram
     SampleDist = dist.pdist(Normalized.T, 'correlation')
@@ -137,7 +137,7 @@ def RiskCluster(Gradients, Raw, Symbols, N=30, Tau=0.05):
     Heatmap = Figure.add_axes([HEATMAP_X, HEATMAP_Y, HEATMAP_W, HEATMAP_H],
                               frame_on=False)
     Heatmap.matshow(Reordered, aspect='auto', origin='lower',
-                    cmap=pylab.cm.bwr)
+                    cmap=plt.cm.bwr)
     Heatmap.set_xticks([])
     Heatmap.set_yticks([])
 
@@ -175,7 +175,7 @@ def RiskCluster(Gradients, Raw, Symbols, N=30, Tau=0.05):
     cnv = Figure.add_axes([TRACK_X, TRACK_Y,
                            TRACK_W, TRACK_H - len(SigMut)*TRACK],
                           frame_on=False)
-    cnv.matshow(CNVs, aspect='auto', origin='lower', cmap=pylab.cm.bwr)
+    cnv.matshow(CNVs, aspect='auto', origin='lower', cmap=plt.cm.bwr)
     for i in range(len(SigCNV)):
         cnv.text(-SPACING, i / np.float(len(SigCNV)) +
                  1/np.float(2*len(SigCNV)),
