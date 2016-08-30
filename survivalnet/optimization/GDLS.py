@@ -47,7 +47,7 @@ class GDLS(object):
         self.cost = model.riskLayer.cost
         self.params = model.params
         is_tr = T.iscalar('is_train')
-
+        self.stop = False
         #change shape of params to array   
         
         self.theta_shape = sum([self.params[i].get_value().size for i in range(len(self.params))])
@@ -121,8 +121,9 @@ class GDLS(object):
                  _line_search_wolfe12(f, fprime, self.theta_t, self.rho_t, self.gf_t,
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
         except _LineSearchError:
-            #print 'Line search failed to find a better solution.\n'         
-            theta_next = self.theta_t + self.gf_t * .0001
+            print 'Line search failed to find a better solution.\n'         
+            self.stop = True
+            theta_next = self.theta_t 
             return theta_next
         #print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t

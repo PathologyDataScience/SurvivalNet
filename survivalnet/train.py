@@ -86,7 +86,8 @@ def train(pretrain_set, train_set, test_set,
 	gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
     survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
-    while epoch < finetune_config['ft_epochs']:
+    maxIter = 0
+    while epoch < finetune_config['ft_epochs'] and not gdls.stop:
         #print epoch    
         train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
 	#print train_features.mean()

@@ -16,18 +16,18 @@ class _LineSearchError(RuntimeError):
 def scalar_search_wolfe1(phi, derphi, phi0=None, old_phi0=None, derphi0=None,
                          c1=1e-4, c2=0.9,
                          amax=50, amin=1e-8, xtol=1e-14):
-
+    maxstp = 1
     if phi0 is None:
         phi0 = phi(0.)
     if derphi0 is None:
         derphi0 = derphi(0.)
 
     if old_phi0 is not None and derphi0 != 0:
-        alpha1 = min(.01, 1.01*2*(phi0 - old_phi0)/derphi0)
+        alpha1 = min(maxstp, 1.01*2*(phi0 - old_phi0)/derphi0)
         if alpha1 < 0:
-            alpha1 = .01
+            alpha1 = maxstp
     else:
-        alpha1 = .01
+        alpha1 = maxstp
 
 
     phi1 = phi0
@@ -247,6 +247,7 @@ def scalar_search_wolfe2(phi, derphi=None, phi0=None,
 
     """
 
+    maxstp = 1
     if phi0 is None:
         phi0 = phi(0.)
 
@@ -255,12 +256,12 @@ def scalar_search_wolfe2(phi, derphi=None, phi0=None,
 
     alpha0 = 0
     if old_phi0 is not None and derphi0 != 0:
-        alpha1 = min(.01, 1.01*2*(phi0 - old_phi0)/derphi0)
+        alpha1 = min(maxstp, 1.01*2*(phi0 - old_phi0)/derphi0)
     else:
-        alpha1 = .01
+        alpha1 = maxstp
 
     if alpha1 < 0:
-        alpha1 = .01
+        alpha1 = maxstp
 
     if alpha1 == 0:
         # This shouldn't happen. Perhaps the increment has slipped below

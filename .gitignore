@@ -6,3 +6,6 @@ output/
 build
 dist
 *.egg-info
+Run.py
+panorg_Run.py
+Bayesian_Optimization.py
