@@ -8,4 +8,5 @@ dist
 *.egg-info
 Run.py
 panorg_Run.py
+Cost_Function.py
 Bayesian_Optimization.py

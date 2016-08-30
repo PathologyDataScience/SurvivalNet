@@ -88,7 +88,7 @@ def OBU_Run():
     #caclulate the risk group for every patient i: patients who die after i
     sa = SurvivalAnalysis()
     train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train);
-    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_br[:fold_size], O_br[:fold_size]);
+    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test);
  
     if doBayesOpt == True:
       print '***Model Selection with BayesOpt for shuffle', str(i), '***'
@@ -196,7 +196,7 @@ def LUADSC_Run():
     O_test = O[-fold_size:]
     T_test = T[-fold_size:]
     train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train);
-    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_br[:fold_size], O_br[:fold_size]);
+    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test);
  
     if doBayesOpt == True:
       print '***Model Selection with BayesOpt for shuffle', str(i), '***'
@@ -304,7 +304,7 @@ def OVBRCA_Run():
     O_test = O[-fold_size:]
     T_test = T[-fold_size:]
     train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train);
-    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_br[:fold_size], O_br[:fold_size]);
+    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test;
  
     if doBayesOpt == True:
       print '***Model Selection with BayesOpt for shuffle', str(i), '***'
