@@ -1,10 +1,13 @@
 import numpy as np
 from .RiskCohort import RiskCohort
 from .RiskCluster import RiskCluster
-from .Visualization import _FixSymbols
+from .Visualization import _SplitSymbols
+from .Visualization import _WrapSymbols
 from .Visualization import RankedBox
 from .Visualization import PairScatter
 from .Visualization import KMPlots
+from .WriteGCT import WriteGCT
+from .WriteRNK import WriteRNK
 
 
 def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
@@ -56,7 +59,8 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     """
 
     # wrap long symbols and remove leading and trailing whitespace
-    Corrected, Types = _FixSymbols(Symbols)
+    Corrected, Types = _SplitSymbols(Symbols)
+    Wrapped = _WrapSymbols(Corrected)
 
     # generate risk derivative profiles for cohort
     print "Generting risk gradient profiles..."
@@ -65,7 +69,7 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     # re-order symbols, raw features, gradients by mean gradient value, trim
     Means = np.asarray(np.mean(Gradients, axis=0))
     Order = np.argsort(-np.abs(Means))
-    cSymbols = [Corrected[i] for i in Order]
+    cSymbols = [Wrapped[i] for i in Order]
     cTypes = [Types[i] for i in Order]
     cRaw = Raw[:, Order]
     cGradients = Gradients[:, Order]
@@ -104,7 +108,7 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
                      Survival, Censored)
 
     # save figures
-    print "Saving figures..."
+    print "Saving figures and outputs..."
     if Path is not None:
 
         # save standard figures
@@ -114,3 +118,7 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
         CFig.savefig(Path + 'Heatmap.pdf')
         for i, Figure in enumerate(KMFigs):
             Figure.savefig(Path + 'KM.' + Symbols[Order[i]].strip() + '.pdf')
+
+        # save tables
+        WriteRNK(Corrected, Means, Path + 'Gradients.rnk')
+        WriteGCT(Corrected, None, Gradients, Path + 'Gradients.gct')

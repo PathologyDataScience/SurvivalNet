@@ -7,7 +7,9 @@ from .Visualize import KMPlots
 from .Visualize import PairScatter
 from .Visualize import RankedBar
 from .Visualize import RankedBox
-from .ReadGMB import ReadGMT
+from .WriteGCT import WriteGCT
+from .WriteRNK import WriteRNK
+from .ReadGMT import ReadGMT
 from .RiskCluster import RiskCluster
 from .SSGSEA import SSGSEA
 
@@ -24,4 +26,6 @@ __all__ = (
     'RiskCluster',
     'RiskCohort',
     'SSGSEA',
+    'WriteGCT',
+    'WriteRNK',
 )

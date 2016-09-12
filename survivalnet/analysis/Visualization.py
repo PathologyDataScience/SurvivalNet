@@ -581,10 +581,10 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
     return Figures
 
 
-def _FixSymbols(Symbols, Length=20):
+def _SplitSymbols(Symbols):
     """
-    Removes trailing and leading whitespace and wraps long labels, separate
-    feature types from feature names, enumerate duplicate symbol names
+    Removes trailing and leading whitespace, separates feature types from
+    feature names, enumerates duplicate symbol names
     """
 
     # modify duplicate symbols where needed - append index to each instance
@@ -603,8 +603,16 @@ def _FixSymbols(Symbols, Length=20):
         else:
             Corrected[i] = Prefix[i]
 
+    return Corrected, Types
+
+
+def _WrapSymbols(Symbols, Length=20):
+    """
+    Wraps long labels
+    """
+
     # remove whitespace and wrap
     Corrected = ['\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
-                 for Symbol in Corrected]
+                 for Symbol in Symbols]
 
-    return Corrected, Types
+    return Corrected
