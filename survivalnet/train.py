@@ -1,16 +1,18 @@
-import timeit
-import sys
-import os
-from model import Model
 import numpy
+import os
+import sys
 import theano
+import timeit
+
+from model import Model
 from optimization import BFGS
 from optimization import GDLS
 from optimization import SurvivalAnalysis 
 from optimization import isOverfitting
+import matplotlib.pyplot as plt
 
 
-def train(pretrain_set, train_set, test_set,
+def train(pretrain_set, train_set, test_set, val_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
              dropout_rate=0.5, non_lin=None, optim = 'GD', disp = True, earlystp = True):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
@@ -77,17 +79,20 @@ def train(pretrain_set, train_set, test_set,
     # early-stopping parameters
     cindex_train = []
     cindex_test = []
+    cindex_val = []
     train_cost_list = []
     test_cost_list = []
+    val_cost_list = []
     #gradient_sizes = []
+    plt.figure(1)
+    plt.ion()
     if optim == 'BFGS':        
         bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
     elif optim == 'GDLS':
 	gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
     survivalAnalysis = SurvivalAnalysis()    
     epoch = 0
-    maxIter = 0
-    while epoch < finetune_config['ft_epochs'] and not gdls.stop:
+    while epoch < finetune_config['ft_epochs']:
         #print epoch    
         train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
 	#print train_features.mean()
@@ -98,7 +103,7 @@ def train(pretrain_set, train_set, test_set,
             gdls.GDLS()	
         elif optim == 'GD':
             #idx = 0
-            grads = backward(train_set['X'], train_set['O'], train_set['A'], 1)
+            backward(train_set['X'], train_set['O'], train_set['A'], 1)
         	#gradients = []
         	#for i in range(len(grads)):
               #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
@@ -108,19 +113,36 @@ def train(pretrain_set, train_set, test_set,
              
         test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
         test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
+
+        val_cost, val_risk, val_features = forward(val_set['X'], val_set['O'], val_set['A'], 0)
+        val_c_index = survivalAnalysis.c_index(val_risk, val_set['T'], 1 - val_set['O'])
         
         cindex_train.append(train_c_index)
         cindex_test.append(test_c_index)
+        cindex_val.append(val_c_index)
+
                 
         train_cost_list.append(train_cost)
         test_cost_list.append(test_cost)
-        
-        if disp: print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
+        val_cost_list.append(val_cost)
+        if disp:
+            x = numpy.arange(0,epoch+1)
+            plt.clf()
+            plt.subplot(1,2,1)        
+
+            plt.plot(x, numpy.asarray(train_cost_list)/train_set['X'].shape[0], 'r--', x, numpy.asarray(test_cost_list)/test_set['X'].shape[0], 'b--', x, numpy.asarray(val_cost_list)/val_set['X'].shape[0], 'g--')
+            plt.subplot(1,2,2)        
+            plt.plot(x, numpy.asarray(cindex_train), 'r--', x, numpy.asarray(cindex_test), 'b--', x, numpy.asarray(cindex_val), 'g--')
+            plt.pause(0.05)
+
+        if disp: 
+            print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
         if earlystp and epoch >= 15 and (epoch % 5 == 0):
             if disp: print "Checking overfitting!"
             check, maxIter = isOverfitting(numpy.asarray(cindex_test))
             if check:                
                 print "Training Stopped Due to Overfitting! cindex = %f, MaxIter = %d" %(cindex_test[maxIter], maxIter)
+                
                 break
 	else: maxIter = epoch
     	sys.stdout.flush()

@@ -245,7 +245,7 @@ def cost_func(params):
     else: nonlin = np.tanh
     i = int(params[4])
     ## PARSET 
-    path = os.path.join(os.getcwd(), 'data/BRCA_Gene.mat')
+    path = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
     pretrain_config = None         #No pre-training 
     X = sio.loadmat(path)
     T = np.asarray([t[0] for t in X['Survival']])

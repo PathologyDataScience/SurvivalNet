@@ -30,7 +30,7 @@ def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
                              **kwargs)
 
     if ret[0] is None:
-        #print 'line search failed: try different one.'
+        print 'line search failed: try different one.'
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', LineSearchWarning)
             ret = line_search_wolfe2(f, fprime, xk, pk, gfk,
@@ -123,7 +123,7 @@ class GDLS(object):
         except _LineSearchError:
             print 'Line search failed to find a better solution.\n'         
             self.stop = True
-            theta_next = self.theta_t 
+            theta_next = self.theta_t + self.gf_t * .00001 
             return theta_next
         #print "Line Search Success! eps = ", self.eps_t
         theta_next = self.theta_t + self.eps_t * self.rho_t

@@ -58,6 +58,8 @@ class Model(object):
         self.dA_layers = []
         self.params = []
         self.n_layers = len(hidden_layers_sizes)
+	self.L1 = 0
+	self.L2_sqr = 0
         if not theano_rng:
             theano_rng = RandomStreams(numpy_rng.randint(2 ** 30))
 
@@ -116,8 +118,10 @@ class Model(object):
                               W=hidden_layer.W,
                               bhid=hidden_layer.b,
                               non_lin=non_lin)
+
                 self.dA_layers.append(dA_layer)
- 
+		self.L1 += abs(hidden_layer.W).sum()
+		self.L2_sqr += (hidden_layer.W ** 2).sum()
             # We now need to add a risk prediction layer on top of the stack
             self.riskLayer = RiskLayer(
                 input=self.hidden_layers[-1].output,
@@ -125,8 +129,12 @@ class Model(object):
                 n_out=n_outs,
                 rng = numpy_rng
             )
-    
+            self.L1 += abs(self.riskLayer.W).sum()
+	    self.L2_sqr += (self.riskLayer.W ** 2).sum()
+ 
+
         self.params.extend(self.riskLayer.params)
+        #cost = self.riskLayer.cost + self.L1 + self.L2_sqr
         
     def pretraining_functions(self, pretrain_x, batch_size):
         index = T.lscalar('index')                  # index to a minibatch

@@ -14,15 +14,15 @@ import shutil
 def OBU_Run():      
   panorg = True
   #where c-index and cost function values are saved 
-  resultPath = os.path.join(os.getcwd(), 'results/final/UOB_Integ/')
+  resultPath = os.path.join(os.getcwd(), 'results/final/UOB_Gene/')
   if os.path.exists(resultPath):
       shutil.rmtree(resultPath)
       os.makedirs(resultPath)
   else:
       os.makedirs(resultPath)
-  path_br = 'data/panorgan/OBU/BRCA_Integ_Raw.mat'
-  path_ut = 'data/panorgan/OBU/UCEC_Integ_Raw.mat'
-  path_ov = 'data/panorgan/OBU/OV_Integ_Raw.mat'
+  path_br = 'data/panorgan/OBU/BRCA_Gene_Raw.mat'
+  path_ut = 'data/panorgan/OBU/UCEC_Gene_Raw.mat'
+  path_ov = 'data/panorgan/OBU/OV_Gene_Raw.mat'
   opt = 'GDLS'    
   pretrain_config = None         #No pre-training 
   pretrain_set = None         #No pre-training 
@@ -31,31 +31,31 @@ def OBU_Run():
   D_ov = sio.loadmat(path_ov)
   D_ut = sio.loadmat(path_ut)
 
-  T_ov = np.asarray([t[0] for t in D_ov['Integ_Survival']])
-  O_ov = 1 - np.asarray([c[0] for c in D_ov['Integ_Censored']])
-  X_ov = D_ov['Integ_X']
+  T_ov = np.asarray([t[0] for t in D_ov['Gene_Survival']])
+  O_ov = 1 - np.asarray([c[0] for c in D_ov['Gene_Censored']])
+  X_ov = D_ov['Gene_X']
 
-  T_ut = np.asarray([t[0] for t in D_ut['Integ_Survival']])
-  O_ut = 1 - np.asarray([c[0] for c in D_ut['Integ_Censored']])
-  X_ut = D_ut['Integ_X']
+  T_ut = np.asarray([t[0] for t in D_ut['Gene_Survival']])
+  O_ut = 1 - np.asarray([c[0] for c in D_ut['Gene_Censored']])
+  X_ut = D_ut['Gene_X']
  
-  T_br = np.asarray([t[0] for t in D_br['Integ_Survival']])
-  O_br = 1 - np.asarray([c[0] for c in D_br['Integ_Censored']])
-  X_br = D_br['Integ_X']
+  T_br = np.asarray([t[0] for t in D_br['Gene_Survival']])
+  O_br = 1 - np.asarray([c[0] for c in D_br['Gene_Censored']])
+  X_br = D_br['Gene_X']
   
   # Use Bayesian Optimization for model selection, 
   #if false ,manually set parameters will be used
-  doBayesOpt = True
+  doBayesOpt = False
   opt = 'GDLS'    
   #pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000, 'pt_batchsize':None,'corruption_level':.3}
   pretrain_config = None         #No pre-training 
-  numberOfShuffles = 20
+  numberOfShuffles = 1
   ft = np.multiply(np.ones((numberOfShuffles, 1)), 40)
   shuffleResults =[]
   avg_cost = 0
   i = 0 
   while i < numberOfShuffles: 
-    prng = np.random.RandomState(i)
+    prng = np.random.RandomState(12)
     order = prng.permutation(np.arange(len(X_br)))
     X_br = X_br[order]
     O_br = O_br[order]
@@ -99,8 +99,8 @@ def OBU_Run():
       nonlin = theano.tensor.nnet.relu if bo_params[3]>.5 else np.tanh
     else:
       n_layers = 1
-      n_hidden = 67
-      do_rate = .35
+      n_hidden = 100
+      do_rate = .5
       #nonlin = theano.tensor.nnet.relu
       nonlin = np.tanh 
 
@@ -304,7 +304,7 @@ def OVBRCA_Run():
     O_test = O[-fold_size:]
     T_test = T[-fold_size:]
     train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train);
-    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test;
+    test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test);
  
     if doBayesOpt == True:
       print '***Model Selection with BayesOpt for shuffle', str(i), '***'
@@ -341,4 +341,4 @@ def OVBRCA_Run():
   sio.savemat(outputFileName, {'cis':shuffleResults})#, f, protocol=cPickle.HIGHEST_PROTOCOL)
   print np.mean(shuffleResults), np.std(shuffleResults)
 if __name__ == '__main__':
-  LUADSC_Run()
+  OBU_Run()
