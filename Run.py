@@ -5,6 +5,7 @@ import os
 import scipy.io as sio
 from survivalnet.optimization import SurvivalAnalysis
 import numpy as np
+import Bayesian_Optimization as BayesOpt
 from survivalnet.train import train
 import theano
 import shutil
@@ -31,11 +32,11 @@ def Run():
   #X = (X - np.min(X, axis = 0))/(np.max(X, axis = 0) - np.min(X, axis=0))
   # Use Bayesian Optimization for model selection, 
   #if false, manually set parameters will be used
-  doBayesOpt = False
-  opt = 'GD'    
+  doBayesOpt = True
+  opt = 'GDLS'    
   #pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000, 'pt_batchsize':None,'corruption_level':.3}
   pretrain_config = None         #No pre-training 
-  numberOfShuffles = 1
+  numberOfShuffles = 20
   ft = np.multiply(np.ones((numberOfShuffles, 1)), 100)
   shuffleResults =[]
   avg_cost = 0
@@ -48,21 +49,21 @@ def Run():
       n_hidden = bo_params[1]
       do_rate = bo_params[2]
       nonlin = theano.tensor.nnet.relu if bo_params[3]>.5 else np.tanh
-      alpha1 = bo_params[4]
-      alpha2 = bo_params[5]
+      lambda1 = bo_params[4]
+      lambda2 = bo_params[5]
     else:
       n_layers = 1
       n_hidden = 1000
       do_rate = 0
-      alpha1 = 0
-      alpha2 = 0
+      lambda1 = 0
+      lambda2 = 0
       #nonlin = theano.tensor.nnet.relu
       nonlin = np.tanh 
 
     expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
             'dor'+ str(do_rate) + '-id' + str(i)       
     #file names: shuffle0.mat, etc.
-    prng = np.random.RandomState(4)
+    prng = np.random.RandomState(i)
     order = prng.permutation(np.arange(len(X)))
     X = X[order]
     #C is censoring status. 0 means alive patient. We change it to O 
@@ -91,7 +92,7 @@ def Run():
     print '***Model Assesment***'
     train_cost_list, cindex_train, test_cost_list, cindex_test, model, _ = train(pretrain_set, train_set, test_set, val_set,
     pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
-    dropout_rate=do_rate, alpha1=alpha1, alpha2=alpha2, non_lin = nonlin, optim = opt, disp = True, earlystp = False )
+    dropout_rate=do_rate, lambda1=lambda1, lambda2=lambda2, non_lin = nonlin, optim = opt, disp = True, earlystp = False )
     i = i + 1
     shuffleResults.append(cindex_test[-1])
     avg_cost += cindex_test[-1]

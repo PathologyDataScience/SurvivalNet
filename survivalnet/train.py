@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 def train(pretrain_set, train_set, test_set, val_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
-             dropout_rate=0.5, non_lin=None, optim = 'GD', alpha1=0,alpha2=0, disp = True, earlystp = True):    
+             dropout_rate=0.5, non_lin=None, optim = 'GD', lambda1=0, lambda2=0, disp = True, earlystp = True):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
     learning_rate_decay = .989    
         
@@ -32,6 +32,8 @@ def train(pretrain_set, train_set, test_set, val_set,
         hidden_layers_sizes = [n_hidden] * n_layers,
         n_outs = 1,
         dropout_rate=dropout_rate,
+	lambda1 = lambda1,
+	lambda2 = lambda2,
         non_lin=non_lin)
         
     #########################
@@ -72,7 +74,7 @@ def train(pretrain_set, train_set, test_set, val_set,
 
     #if disp: print '... getting the finetuning functions'
     forward, backward = model.build_finetune_functions(
-        learning_rate=finetune_lr, alpha1 = alpha1, alpha2 = alpha2
+        learning_rate=finetune_lr
     )
 
     #if disp: print '... finetunning the model'
@@ -151,5 +153,7 @@ def train(pretrain_set, train_set, test_set, val_set,
         decay_learning_rate()
         epoch += 1
     	if numpy.isnan(test_cost): break 
-    if disp: print 'best score is: %f' % max(cindex_test)
+    if disp: 
+	print 'best score is: %f' % max(cindex_test)
+        plt.savefig('fig1.pdf')
     return train_cost_list, cindex_train, test_cost_list, cindex_test, model, maxIter

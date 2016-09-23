@@ -24,7 +24,9 @@ class Model(object):
         n_outs=1,
         corruption_levels=[0.1, 0.1],
         dropout_rate=0.1,
-        non_lin=None,
+	lambda1 = 0,
+	lambda2 = 0,
+        non_lin=None
     ):
         """        
         :type numpy_rng: numpy.random.RandomState
@@ -132,7 +134,8 @@ class Model(object):
             self.L1 += abs(self.riskLayer.W).sum()
 	    self.L2_sqr += (self.riskLayer.W ** 2).sum()
  
-
+	    self.L1 *= lambda1
+	    self.L2_sqr *= lambda2
         self.params.extend(self.riskLayer.params)
         #cost = self.riskLayer.cost + self.L1 + self.L2_sqr
         
@@ -175,7 +178,7 @@ class Model(object):
 
         return pretrain_fns
 
-    def build_finetune_functions(self, learning_rate, alpha1, alpha2):
+    def build_finetune_functions(self, learning_rate):
         
         is_train = T.iscalar('is_train')
               
@@ -200,14 +203,14 @@ class Model(object):
         backward = theano.function(
             on_unused_input='ignore',
             inputs=[X, Observed, AtRisk, is_train],
-            updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk) + (self.L1*lambda1 + self.L2_sqr*lambda2, self.params, learning_rate),
+            updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk) - self.L1 - self.L2_sqr, self.params, learning_rate),
             givens={
                 self.x: X,
                 self.o: Observed,
                 self.AtRisk: AtRisk,
                 self.is_train:is_train
             },
-            name='forward'
+            name='backward'
         )
         return forward, backward
 

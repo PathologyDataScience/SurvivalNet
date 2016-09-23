@@ -243,15 +243,17 @@ def cost_func(params):
     if params[3] > .5:
         nonlin = theano.tensor.nnet.relu
     else: nonlin = np.tanh
-    i = int(params[4])
+    lambda1 = params[4]
+    lambda2 = params[5]
+    i = int(params[6])
     ## PARSET 
-    path = os.path.join(os.getcwd(), 'data/KIPAN_Gene.mat')
+    path = os.path.join(os.getcwd(), 'data/Brain_Integ.mat')
     pretrain_config = None         #No pre-training 
     X = sio.loadmat(path)
     T = np.asarray([t[0] for t in X['Survival']])
     O = 1 - np.asarray([c[0] for c in X['Censored']])
     ## PARSET 
-    X = X['Gene_X']
+    X = X['Integ_X']
     prng = np.random.RandomState(int(i))
     order = prng.permutation(np.arange(len(X)))
     X = X[order]
@@ -271,14 +273,14 @@ def cost_func(params):
     test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[fold_size:fold_size*2], T[fold_size:fold_size*2], O[fold_size:fold_size*2]);
     #test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
     pretrain_set = X
+    val_set = test_set
     pretrain_config = None         #No pre-training 
     finetune_config = {'ft_lr':0.001, 'ft_epochs':40}
         #Print experiment identifier         
     expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + 'dor' + str(do_rate) + str(nonlin) +'-id' + str(int(i))       
     print expID 
-    _, _, test_cost_list, cindex_test,_, maxIter = train(pretrain_set, train_set, test_set,
-         pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
-           dropout_rate=do_rate, non_lin=nonlin, optim = "GDLS", disp = False, earlystp = False)
+    _, _, test_cost_list, cindex_test,_, maxIter = train(pretrain_set, train_set, test_set, val_set, pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
+           dropout_rate=do_rate, lambda1= lambda1, lambda2 = lambda2,  non_lin=nonlin, optim = "GDLS", disp = False, earlystp = False)
     if not test_cost_list or np.isnan(test_cost_list[-1]):
         print 'Skipping due to NAN'
         return 1 
@@ -289,5 +291,5 @@ def cost_func(params):
 #def st_cost_func(params):
 
 if __name__ == '__main__':
-        res = OBU_cost_func([4.0,38.0,0.01,0.6,0.64])
+        res = cost_func([1.0,38.0,0,0.1, 0.1, 0,0.64])
 	print res
