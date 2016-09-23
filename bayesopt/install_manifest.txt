@@ -1,7 +1,0 @@
-/usr/local/lib/libbayesopt.a
-/usr/local/include/bayesopt/bayesopt/bayesopt.h
-/usr/local/include/bayesopt/bayesopt/bayesopt.hpp
-/usr/local/include/bayesopt/bayesopt/bayesoptbase.hpp
-/usr/local/include/bayesopt/bayesopt/parameters.h
-/usr/local/include/bayesopt/bayesopt/parameters.hpp
-/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/bayesopt.so
