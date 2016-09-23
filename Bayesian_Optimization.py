@@ -19,10 +19,10 @@ def tune(i):
     params['n_init_samples'] = 2
     
     print "*** Model Selection with BayesOpt ***"
-    n = 5                # n dimensions
-# params: #layer, width, dropout, L2reg, nonlinearity 
-    lb = np.array([1,  10, .0, 0, i])
-    ub = np.array([3,1000, .9, 1, i+.5])
+    n = 7                # n dimensions
+# params: #layer, width, dropout, nonlinearity, l1_rate, l2_rate
+    lb = np.array([1, 1000, .0, 0, 0, 0, i])
+    ub = np.array([1, 1000, .0, 1, 1, 0, i+.5])
 
     start = clock()
     mvalue, x_out, error = bayesopt.optimize(cost_func, n, lb, ub, params)

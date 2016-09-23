@@ -175,7 +175,7 @@ class Model(object):
 
         return pretrain_fns
 
-    def build_finetune_functions(self, learning_rate):
+    def build_finetune_functions(self, learning_rate, alpha1, alpha2):
         
         is_train = T.iscalar('is_train')
               
@@ -200,7 +200,7 @@ class Model(object):
         backward = theano.function(
             on_unused_input='ignore',
             inputs=[X, Observed, AtRisk, is_train],
-            updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk), self.params, learning_rate),
+            updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk) + (self.L1*lambda1 + self.L2_sqr*lambda2, self.params, learning_rate),
             givens={
                 self.x: X,
                 self.o: Observed,

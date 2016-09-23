@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 def train(pretrain_set, train_set, test_set, val_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
-             dropout_rate=0.5, non_lin=None, optim = 'GD', disp = True, earlystp = True):    
+             dropout_rate=0.5, non_lin=None, optim = 'GD', alpha1=0,alpha2=0, disp = True, earlystp = True):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
     learning_rate_decay = .989    
         
@@ -72,7 +72,7 @@ def train(pretrain_set, train_set, test_set, val_set,
 
     #if disp: print '... getting the finetuning functions'
     forward, backward = model.build_finetune_functions(
-        learning_rate=finetune_lr
+        learning_rate=finetune_lr, alpha1 = alpha1, alpha2 = alpha2
     )
 
     #if disp: print '... finetunning the model'
@@ -132,7 +132,7 @@ def train(pretrain_set, train_set, test_set, val_set,
 
             plt.plot(x, numpy.asarray(train_cost_list)/train_set['X'].shape[0], 'r--', x, numpy.asarray(test_cost_list)/test_set['X'].shape[0], 'b--', x, numpy.asarray(val_cost_list)/val_set['X'].shape[0], 'g--')
             plt.subplot(1,2,2)        
-            plt.plot(x, numpy.asarray(cindex_train), 'r--', x, numpy.asarray(cindex_test), 'b--', x, numpy.asarray(cindex_val), 'g--')
+            plt.plot(x, numpy.asarray(cindex_train), 'r--', x, numpy.asarray(cindex_test), 'g--', x, numpy.asarray(cindex_val), 'b--')
             plt.pause(0.05)
 
         if disp: 

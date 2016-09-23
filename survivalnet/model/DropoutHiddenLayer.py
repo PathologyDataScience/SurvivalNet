@@ -10,8 +10,8 @@ class DropoutHiddenLayer(HiddenLayer):
         super(DropoutHiddenLayer, self).__init__(
                 rng=rng, input=input, n_in=n_in, n_out=n_out, W=W, b=b,
                 activation=activation)
-        train_output = _dropout_from_layer(rng, self.output1, p=dropout_rate)
-        test_output = self.output1 * (1 - dropout_rate)
+        train_output = _dropout_from_layer(rng, self.output, p=dropout_rate)
+        test_output = self.output * (1 - dropout_rate)
         self.output = T.switch(T.eq(is_train, 1), train_output, test_output)   # if train
 		
 def _dropout_from_layer(rng, layer, p):
