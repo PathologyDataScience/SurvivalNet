@@ -4,5 +4,4 @@ output/
 dist/
 build/
 .egg-info/
-*.pdf
 *.pyc
