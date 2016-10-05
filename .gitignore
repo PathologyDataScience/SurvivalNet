@@ -1,7 +1,4 @@
 data/
 results/
 output/
-dist/
-build/
-.egg-info/
 *.pyc
