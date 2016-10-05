@@ -8,7 +8,7 @@ import os
 import tensorflow as tf
 import Bayesian_Optimization as BayesOpt
 
-def Run () :
+def TFRun () :
         session = tf.InteractiveSession()
         """ This function is to train SurvivalNet with Tensorflow.
         :type mat_file_path: string
@@ -33,8 +33,8 @@ def Run () :
         :param prefix: prefix of output file that stores all results
         
         """
-        num_shuffles = 1
-        num_steps=1
+        num_shuffles = 20
+        num_steps=50
         mat_file_path = 'data/Brain_Integ.mat'
         p = os.path.join(os.getcwd(), mat_file_path)
         Data = sio.loadmat(p)
@@ -48,10 +48,11 @@ def Run () :
         for shuffle in xrange(num_shuffles):
             _, bo_params,_ = BayesOpt.tune(shuffle)
             random.seed(shuffle)
-            nl = bo_params[0]
-            n_hidden = bo_params[1]
+            nl = int(bo_params[0])
+            n_hidden = int(bo_params[1])
             do_rate = bo_params[2]
             prefix = 'results/' + str(nl)+'-'+str(n_hidden)+'-'+str(do_rate) 
+	    print('run: ', prefix + '-' + str(shuffle))
             index = np.arange(X.shape[0])
             random.shuffle(index)
 
@@ -194,5 +195,5 @@ def Run () :
             rsum += test_c_index
         return rsum/num_shuffles
 if __name__ == '__main__':
-    result = cost_func([1,100, .5])
+    result = TFRun()
     print result

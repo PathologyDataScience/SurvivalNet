@@ -1,0 +1,8 @@
+setup.py
+survivalnet/__init__.py
+survivalnet/train.py
+survivalnet.egg-info/PKG-INFO
+survivalnet.egg-info/SOURCES.txt
+survivalnet.egg-info/dependency_links.txt
+survivalnet.egg-info/not-zip-safe
+survivalnet.egg-info/top_level.txt

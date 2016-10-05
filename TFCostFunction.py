@@ -14,7 +14,7 @@ def cost_func (params) :
         :param params: vector containing network parameters #layers, #hidden units, dropout rate, and random seed
         
         """
-        shuffle = int(params[4])
+        shuffle = int(params[3])
         random.seed(shuffle)
         num_steps=50
         mat_file_path = 'data/Brain_Integ.mat'
@@ -70,9 +70,11 @@ def cost_func (params) :
                 return cumsum
 
 
-        nl = params[0] 
-        n_hidden = params[1] 
+        nl = int(params[0]) 
+        n_hidden = int(params[1]) 
         do_rate = params[2] 
+        prefix = 'results/' + str(nl)+'-'+str(n_hidden)+'-'+str(do_rate) 
+	print('cost: ', prefix + '-' + str(shuffle))
         ## data
         input = tf.placeholder(tf.float32, [n_obs, n_in])
         at_risk = tf.placeholder(tf.int32, [n_obs, ])
@@ -167,10 +169,10 @@ def cost_func (params) :
             outputV, test_outputV, costV,_ = session.run([output, test_output, cost, train_step],feed_dict=feed_dict)
             train_c_index = sa.c_index(outputV, train_set['T'], train_set['C'])
             test_c_index = sa.c_index(test_outputV, test_set['T'], test_set['C'])
-            if (step % 10 == 1) :
-                    print("step: " + str(step) + ", cost: " + str(costV) + ", train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
+#            if (step % 10 == 1) :
+#                    print("step: " + str(step) + ", cost: " + str(costV) + ", train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
         return 1 - test_c_index
 
 if __name__ == '__main__':
-    result = cost_func([1,100, .5])
+    result = cost_func([1,100, .5, 0.5])
     print result

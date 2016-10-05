@@ -1,0 +1,19 @@
+Metadata-Version: 1.1
+Name: survivalnet
+Version: 0.1.0
+Summary: Deep learning survival models
+Home-page: https://github.com/cooperlab/SurvivalNet
+Author: Emory University
+Author-email: lee.cooper@emory.edu
+License: 
+
+Description: UNKNOWN
+Keywords: survivalnet
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

@@ -12,7 +12,7 @@ import theano
 
 def tune(i):
     params = {}
-    params['n_iterations'] = 3
+    params['n_iterations'] = 30
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
@@ -22,7 +22,6 @@ def tune(i):
     lb = np.array([1,  10,  .0, i])
     ub = np.array([3, 500, .9, i+.5])
 
-    start = clock()
     mvalue, x_out, error = bayesopt.optimize(cost_func, n, lb, ub, params)
     print "Result", mvalue, "at", x_out
     return mvalue, x_out, error
