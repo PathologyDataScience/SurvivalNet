@@ -7,34 +7,17 @@ import scipy.io as sio
 import os
 import tensorflow as tf
 
-def trainSurvivalNet (mat_file_path, nl, n_hidden, do_rate) :
+def cost_func (params) :
         session = tf.InteractiveSession()
-        """ This function is to train SurvivalNet with Tensorflow.
-        :type mat_file_path: string
-        :param mat_file_path: path to the file that stores data in .mat format
-        
-        :type n_hidden: integer
-        :param n_hidden: number of hidden nodes in a layer
-        
-        :type num_steps: integer
-        :param num_steps: number of iterations to run
-
-        :type num_shuffles: integer
-        :param num_shuffles: number of shuffles to run
-
-        :type penaltyLambdaArray: np.float32 array
-        :param penaltyLambdaArray: array of lambda (regularization parameters) to train to model
-
-        :type alphaArray: np.float32 array
-        :param alphaArray: array of alpha (balancing factor between L1 and L2 in elastic net) to train the model
-
-        :type prefix: string
-        :param prefix: prefix of output file that stores all results
+        """ This function is to the cost function to pass to Bayesian Optimization.
+        :type params: ndarray 
+        :param params: vector containing network parameters #layers, #hidden units, dropout rate, and random seed
         
         """
-        prefix = 'results/' + str(nl)+'-'+str(n_hidden)+'-'+str(do_rate) 
+        shuffle = int(params[4])
+        random.seed(shuffle)
         num_steps=50
-
+        mat_file_path = 'data/Brain_Integ.mat'
         p = os.path.join(os.getcwd(), mat_file_path)
         Data = sio.loadmat(p)
 
@@ -62,7 +45,6 @@ def trainSurvivalNet (mat_file_path, nl, n_hidden, do_rate) :
         sa = SurvivalAnalysis()    
         train_set['X'], train_set['T'], train_set['C'], train_set['A'] = sa.calc_at_risk(X[0:fold * 6,], T[0:fold * 6], C[0:fold * 6]);
         test_set['X'], test_set['T'], test_set['C'], test_set['A'] = sa.calc_at_risk(X[fold * 6: fold * 8,], T[fold * 6: fold * 8], C[fold * 6: fold * 8]);
-        final_set['X'], final_set['T'], final_set['C'], final_set['A'] = sa.calc_at_risk(X[fold * 8: ,], T[fold * 8: ], C[fold * 8:]);
 
         # initialization
         n_obs = train_set['X'].shape[0] 
@@ -88,7 +70,9 @@ def trainSurvivalNet (mat_file_path, nl, n_hidden, do_rate) :
                 return cumsum
 
 
-       
+        nl = params[0] 
+        n_hidden = params[1] 
+        do_rate = params[2] 
         ## data
         input = tf.placeholder(tf.float32, [n_obs, n_in])
         at_risk = tf.placeholder(tf.int32, [n_obs, ])
@@ -188,5 +172,5 @@ def trainSurvivalNet (mat_file_path, nl, n_hidden, do_rate) :
         return 1 - test_c_index
 
 if __name__ == '__main__':
-    result = trainSurvivalNet('data/Brain_Integ.mat', 1,100, .5)
+    result = cost_func([1,100, .5])
     print result
