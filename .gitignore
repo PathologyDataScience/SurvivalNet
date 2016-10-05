@@ -1,0 +1,4 @@
+data/
+results/
+*.pdf
+*.pyc

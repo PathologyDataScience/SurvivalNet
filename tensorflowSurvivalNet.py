@@ -7,6 +7,7 @@ import random
 import scipy.io as sio
 import os
 import tensorflow as tf
+import cPickle
 
 random.seed(100)
 
@@ -40,11 +41,10 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
         Brain_C = sio.loadmat(p)
 
         data = Brain_C['Integ_X']
-        censor = np.asarray([c[0] for c in Brain_C['Censored']])
+        C = np.asarray([c[0] for c in Brain_C['Censored']])
         survival = np.asarray([t[0] for t in Brain_C['Survival']])
 
         T = np.asarray([t[0] for t in Brain_C['Survival']])
-        O = 1 - np.asarray([c[0] for c in Brain_C['Censored']])
         X = Brain_C['Integ_X']
 
         #Use the whole dataset fotr pretraining
@@ -60,9 +60,9 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
 
         #caclulate the risk group for every patient i: patients who die after i
         sa = SurvivalAnalysis()    
-        train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[0:fold_size * 6,], T[0:fold_size * 6], O[0:fold_size * 6]);
-        test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[fold_size * 6: fold_size * 8,], T[fold_size * 6: fold_size * 8], O[fold_size * 6: fold_size * 8]);
-        final_set['X'], final_set['T'], final_set['O'], final_set['A'] = sa.calc_at_risk(X[fold_size * 8: ,], T[fold_size * 8: ], O[fold_size * 8:]);
+        train_set['X'], train_set['T'], train_set['C'], train_set['A'] = sa.calc_at_risk(X[0:fold_size * 6,], T[0:fold_size * 6], C[0:fold_size * 6]);
+        test_set['X'], test_set['T'], test_set['C'], test_set['A'] = sa.calc_at_risk(X[fold_size * 6: fold_size * 8,], T[fold_size * 6: fold_size * 8], C[fold_size * 6: fold_size * 8]);
+        final_set['X'], final_set['T'], final_set['C'], final_set['A'] = sa.calc_at_risk(X[fold_size * 8: ,], T[fold_size * 8: ], C[fold_size * 8:]);
 
         ## initialization
         n_obs = train_set['X'].shape[0] # 302
@@ -88,7 +88,7 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                 return cumsum
 
 
-        with tf.device('/gpu:1'):
+        with tf.device('/cpu'):
                 ## dropout
                 keep_prob = tf.placeholder(tf.float32)
                 
@@ -114,7 +114,7 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                 output_layer1_drop = tf.nn.dropout(output_layer1, keep_prob)
                 prediciton_layer1 = tf.nn.relu(tf.matmul(test_input, w_1))
 
-                ## layer_2
+                """ ## layer_2
                 w_2 = tf.Variable(tf.truncated_normal([n_hidden, n_hidden], dtype=tf.float32)/20)
                 output_layer2 = tf.nn.relu(tf.matmul(output_layer1_drop, w_2))
                 output_layer2_drop = tf.nn.dropout(output_layer2, keep_prob)
@@ -136,13 +136,14 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                 w_5 = tf.Variable(tf.truncated_normal([n_hidden, n_hidden], dtype=tf.float32)/20)
                 output_layer5 = tf.nn.relu(tf.matmul(output_layer4_drop, w_5))
                 output_layer5_drop = tf.nn.dropout(output_layer5, keep_prob)
-                prediciton_layer5 = tf.nn.relu(tf.matmul(prediciton_layer4, w_5))
+                prediciton_layer5 = tf.nn.relu(tf.matmul(prediciton_layer4, w_5))"""
                 
+
                 ## output layer
                 w_6 = tf.Variable(tf.truncated_normal([n_hidden, n_out], dtype=tf.float32)/20)
-                output = tf.matmul(output_layer5_drop, w_6)
+                output = tf.matmul(output_layer1_drop, w_6)
 
-                prediction_output = tf.matmul(prediciton_layer5, w_6)
+                prediction_output = tf.matmul(prediciton_layer1, w_6)
                    
                 exp = tf.reverse(tf.exp(output), dims = [True, False])
                 partial_sum_a = cumsum(exp, n_obs)
@@ -150,9 +151,14 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                 log_at_risk = tf.log(tf.gather(partial_sum, tf.reshape(at_risk, [-1])) + 1e-50)
                 diff = tf.sub(output,log_at_risk)
                 times = tf.reshape(diff, [-1]) * observed
-                cost = - (tf.reduce_sum(times)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_6)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_5)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_4)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_3)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_3)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_2)) + alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_1)) + (1 - alpha) * tf.reduce_sum(penaltyLambda * tf.abs(w_6)) + (1 - alpha) * tf.reduce_sum(penaltyLambda * tf.abs(w_5)) + (1 - alpha) *  tf.reduce_sum(penaltyLambda * tf.abs(w_4)) + (1 - alpha) *  tf.reduce_sum(penaltyLambda * tf.abs(w_3)) + (1 - alpha) *  tf.reduce_sum(penaltyLambda * tf.abs(w_3)) + (1 - alpha) *  tf.reduce_sum(penaltyLambda * tf.abs(w_2)) + (1 - alpha) *  tf.reduce_sum(penaltyLambda * tf.abs(w_1))
-                
-                weightSize = tf.nn.l2_loss(w_1) + tf.nn.l2_loss(w_2) + tf.nn.l2_loss(w_3) + tf.nn.l2_loss(w_4) + tf.nn.l2_loss(w_5) + tf.nn.l2_loss(w_6)
+                cost = - (tf.reduce_sum(times)) +\
+                alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_6)) +\
+                alpha * tf.reduce_sum(penaltyLambda * tf.nn.l2_loss(w_1)) +\
+                (1 - alpha) * tf.reduce_sum(penaltyLambda * tf.abs(w_6)) +\
+                (1 - alpha) * tf.reduce_sum(penaltyLambda * tf.abs(w_1))
+
+                weightSize = tf.nn.l2_loss(w_1) + \
+                tf.nn.l2_loss(w_6)
 
 
                 ### prediction
@@ -178,7 +184,7 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                 for penaltyLambdaIndex in range(len(penaltyLambdaArray)):
                         print("lambda: " + str(penaltyLambdaArray[penaltyLambdaIndex]))
                 
-                        targetFile = prefix + ".lambda." + str(penaltyLambdaArray[penaltyLambdaIndex]) + ".alpha." + str(alphaArray[alphaArrayIndex]) + ".txt"
+                        targetFile = os.path.join(os.getcwd(), prefix) + ".txt"
                  
                         target = open(targetFile, "w")
                         finalTestingAcc = np.zeros(num_shuffles)
@@ -188,19 +194,19 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
 
                         session = tf.InteractiveSession()
 
-                        header = prefix + ".lambda." + str(penaltyLambdaArray[penaltyLambdaIndex]) + ".alpha." + str(alphaArray[alphaArrayIndex])
-
                         for shuffle in range(num_shuffles):
-                                outputFile = header + "." + str(shuffle) + ".txt"
-                                outputFH = open(outputFile, "w")
-                                outputFH.write("trainCost" + "\t" + "testCost" + "\t" + "trainCIndex" + "\t" + "testCIndex" + "\t" + "weightSize" + "\n")
+                                test_ci=[]
+                                train_ci=[]
+                                test_cost=[]
+                                train_cost=[]
+                                outputPath = os.path.join(os.getcwd(), prefix) + "-" + str(shuffle)
 
                                 tf.initialize_all_variables().run()
                                 index = np.arange(data.shape[0])
                                 random.shuffle(index)
 
                                 X = X[index, :]
-                                O = O[index]
+                                C = C[index]
                                 T = T[index]
                         
                                 fold_size = int( len(X) / 10)
@@ -211,47 +217,52 @@ def trainSurvivalNet (mat_file_path, n_hidden, num_steps, num_shuffles, penaltyL
                         
                             
                                 sa = SurvivalAnalysis()    
-                                train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[0:fold_size * 6,], T[0:fold_size * 6], O[0:fold_size * 6]);
-                                test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[fold_size * 6: fold_size * 8,], T[fold_size * 6: fold_size * 8], O[fold_size * 6: fold_size * 8]);
-                                final_set['X'], final_set['T'], final_set['O'], final_set['A'] = sa.calc_at_risk(X[fold_size * 8: fold_size * 10,], T[fold_size * 8:fold_size * 10 ], O[fold_size * 8:fold_size * 10]);
+                                train_set['X'], train_set['T'], train_set['C'], train_set['A'] = sa.calc_at_risk(X[0:fold_size * 6,], T[0:fold_size * 6], C[0:fold_size * 6]);
+                                test_set['X'], test_set['T'], test_set['C'], test_set['A'] = sa.calc_at_risk(X[fold_size * 6: fold_size * 8,], T[fold_size * 6: fold_size * 8], C[fold_size * 6: fold_size * 8]);
+                                #final_set['X'], final_set['T'], final_set['C'], final_set['A'] = sa.calc_at_risk(X[fold_size * 8: fold_size * 10,], T[fold_size * 8:fold_size * 10 ], C[fold_size * 8:fold_size * 10]);
 
                                 number_of_range = 0
                                 sum_of_test_c_index = np.zeros(15)
                                 for step in range(num_steps):
-                                        feed_dict = {input : train_set['X'], at_risk : train_set['A'], observed : train_set['O'], test_input : test_set['X'], prediction_at_risk: test_set['A'], prediction_observed : test_set['O'], keep_prob : 1, penaltyLambda : penaltyLambdaArray[penaltyLambdaIndex], alpha : alphaArray[alphaArrayIndex]}
+                                        feed_dict = {input : train_set['X'], at_risk : train_set['A'], observed : 1-train_set['C'], test_input : test_set['X'], prediction_at_risk: test_set['A'], prediction_observed : 1-test_set['C'], keep_prob : .5, penaltyLambda : penaltyLambdaArray[penaltyLambdaIndex], alpha : alphaArray[alphaArrayIndex]}
 
                                         timesV, _, test_outputV, outputV, costV, expV, partialV, logV, diffV, w1V, costTestV, weightSizeV = session.run([times, optimizer, prediction_output, output, cost, exp, partial_sum, log_at_risk, diff, w_1, prediction_cost, weightSize], feed_dict = feed_dict)
-                                        train_c_index = _naive_concordance_index(train_set['T'], -outputV, train_set['O'])
-                                        test_c_index = _naive_concordance_index(test_set['T'], -test_outputV, test_set['O'])
-
-                                        bestAccInOneShuffle[step] = test_c_index
+                                        train_c_index = sa.c_index(outputV, train_set['T'], train_set['C'])
+                                        train_ci.append(train_c_index)
+                                        test_c_index = sa.c_index(test_outputV, test_set['T'], test_set['C'])
+                                        test_ci.append(test_c_index)
+                                        train_cost.append(costV)
+                                        test_cost.append(costTestV)
                                 
-                                        outputFH.write(str(costV) + "\t" + str(costTestV) + "\t" + str(train_c_index) + "\t" + str(test_c_index) + "\t" + str(weightSizeV) + "\n")
-
-
                                         if (step % 10 == 0) :
-                                                print("step: " + str(step) + ", cost: " + str(costV))
-                                                print("train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
+                                                print("step: " + str(step) + ", cost: " + str(costV) + ", train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
 
                                         if (step == num_steps - 1):
-                                                print("best result: " + str(np.max(bestAccInOneShuffle)))
-                                                feed_dict = {input : train_set['X'], at_risk : train_set['A'], observed : train_set['O'], test_input : final_set['X'], keep_prob : 1, penaltyLambda : penaltyLambdaArray[penaltyLambdaIndex], alpha : alphaArray[alphaArrayIndex]}
+                                                print("best result at shuffle "+ str(shuffle) +' ' + str(np.max(test_ci)))
+                                                #feed_dict = {input : train_set['X'], at_risk : train_set['A'], observed : 1-train_set['C'], test_input : final_set['X'], keep_prob : 1, penaltyLambda : penaltyLambdaArray[penaltyLambdaIndex], alpha : alphaArray[alphaArrayIndex]}
+                                                f1 = open(outputPath+'tst_ci.txt', 'w')
+                                                f2 = open(outputPath+'tst_cost.txt', 'w')
+                                                f3 = open(outputPath+'trn_ci.txt', 'w')
+                                                f4 = open(outputPath+'trn_cost.txt', 'w')
 
-                                                final_outputV = session.run(prediction_output, feed_dict = feed_dict)
-                                                final_c_index =  _naive_concordance_index(final_set['T'], -final_outputV, final_set['O'])
-                                                finalTestingAcc[shuffle] = final_c_index
+                                                cPickle.dump(test_ci, f1, protocol=cPickle.HIGHEST_PROTOCOL)
+                                                cPickle.dump(test_cost, f2, protocol=cPickle.HIGHEST_PROTOCOL)
+                                                cPickle.dump(train_ci, f3, protocol=cPickle.HIGHEST_PROTOCOL)
+                                                cPickle.dump(train_cost, f4, protocol=cPickle.HIGHEST_PROTOCOL)
+
+#                                                final_outputV = session.run(prediction_output, feed_dict = feed_dict)
+#                                                final_c_index = sa.c_index(final_outputV, final_set['T'], final_set['C'])
+#                                                finalTestingAcc[shuffle] = final_c_index
                                                 testingAcc[shuffle] = test_c_index
 
-
-                                outputFH.close()
-
-                        target.write("final mean: " + str(np.mean(finalTestingAcc)) + "\n")
-                        target.write("final sd: " + str(np.std(finalTestingAcc)) + "\n")
+#                        target.write("final mean: " + str(np.mean(finalTestingAcc)) + "\n")
+#                        target.write("final sd: " + str(np.std(finalTestingAcc)) + "\n")
 
                         target.write("---\n")
 
-                        target.write("validation mean: " + str(np.mean(testingAcc)) + "\n")
-                        target.write("validation sd: " + str(np.std(testingAcc)) + "\n")
+                        target.write("testing mean: " + str(np.mean(testingAcc)) + "\n")
+                        target.write("testing sd: " + str(np.std(testingAcc)) + "\n")
 
                         target.close()
-
+if __name__ == '__main__':
+    trainSurvivalNet('data/Brain_Integ.mat', 500,500, 20, [0], [0], 'results/nl1-hs500-do.5')
