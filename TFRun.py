@@ -33,9 +33,9 @@ def TFRun () :
         :param prefix: prefix of output file that stores all results
         
         """
-        num_shuffles = 20
+        num_shuffles = 1
         num_steps=50
-        mat_file_path = 'data/Brain_Integ.mat'
+        mat_file_path = 'data/KIPAN_Integ.mat'
         p = os.path.join(os.getcwd(), mat_file_path)
         Data = sio.loadmat(p)
 
@@ -46,13 +46,14 @@ def TFRun () :
         X = Data['Integ_X']
         rsum = 0
         for shuffle in xrange(num_shuffles):
-            _, bo_params,_ = BayesOpt.tune(shuffle)
-            random.seed(shuffle)
+            seed = 19
+            _, bo_params,_ = BayesOpt.tune(seed)
+	    random.seed(seed)
             nl = int(bo_params[0])
             n_hidden = int(bo_params[1])
             do_rate = bo_params[2]
             prefix = 'results/' + str(nl)+'-'+str(n_hidden)+'-'+str(do_rate) 
-	    print('run: ', prefix + '-' + str(shuffle))
+	    print('run: ', prefix + '-' + str(seed))
             index = np.arange(X.shape[0])
             random.shuffle(index)
 
@@ -190,8 +191,7 @@ def TFRun () :
                 outputV, test_outputV, costV,_ = session.run([output, test_output, cost, train_step],feed_dict=feed_dict)
                 train_c_index = sa.c_index(outputV, train_set['T'], train_set['C'])
                 test_c_index = sa.c_index(test_outputV, test_set['T'], test_set['C'])
-                if (step % 10 == 1) :
-                        print("step: " + str(step) + ", cost: " + str(costV) + ", train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
+                print("step: " + str(step) + ", cost: " + str(costV) + ", train cIndex: " + str(train_c_index) + ", test cIndex: " + str(test_c_index))
             rsum += test_c_index
         return rsum/num_shuffles
 if __name__ == '__main__':

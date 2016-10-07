@@ -17,7 +17,7 @@ def cost_func (params) :
         shuffle = int(params[3])
         random.seed(shuffle)
         num_steps=50
-        mat_file_path = 'data/Brain_Integ.mat'
+        mat_file_path = 'data/KIPAN_Integ.mat'
         p = os.path.join(os.getcwd(), mat_file_path)
         Data = sio.loadmat(p)
 
