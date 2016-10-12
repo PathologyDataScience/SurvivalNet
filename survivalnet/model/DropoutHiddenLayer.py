@@ -3,6 +3,7 @@ __docformat__ = 'restructedtext en'
 import theano
 import theano.tensor as T
 from .HiddenLayer import HiddenLayer
+from theano.ifelse import ifelse
 
 class DropoutHiddenLayer(HiddenLayer):
     def __init__(self, rng, input, n_in, n_out, is_train,
@@ -12,7 +13,7 @@ class DropoutHiddenLayer(HiddenLayer):
                 activation=activation)
         train_output = _dropout_from_layer(rng, self.output, p=dropout_rate)
         test_output = self.output * (1 - dropout_rate)
-        self.output = T.switch(T.eq(is_train, 1), train_output, test_output)   # if train
+        self.output = ifelse(T.eq(is_train, 1), train_output, test_output)   # if train
 		
 def _dropout_from_layer(rng, layer, p):
     """

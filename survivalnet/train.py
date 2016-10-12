@@ -73,7 +73,7 @@ def train(pretrain_set, train_set, test_set, val_set,
     ########################
 
     #if disp: print '... getting the finetuning functions'
-    forward, backward = model.build_finetune_functions(
+    test, train = model.build_finetune_functions(
         learning_rate=finetune_lr
     )
 
@@ -96,16 +96,16 @@ def train(pretrain_set, train_set, test_set, val_set,
     epoch = 0
     while epoch < finetune_config['ft_epochs']:
         #print epoch    
-        train_cost, train_risk, train_features = forward(train_set['X'], train_set['O'], train_set['A'], 1)
+        train_cost, train_risk, train_features = train(train_set['X'], train_set['O'], train_set['A'], 1)
 	#print train_features.mean()
         if optim == 'BFGS':        
             bfgs.BFGS()	
             #gradient_sizes.append(numpy.linalg.norm(bfgs.gf_t))        
         elif optim == 'GDLS':        
             gdls.GDLS()	
-        elif optim == 'GD':
+#        elif optim == 'GD':
             #idx = 0
-            backward(train_set['X'], train_set['O'], train_set['A'], 1)
+ #           backward(train_set['X'], train_set['O'], train_set['A'], 1)
         	#gradients = []
         	#for i in range(len(grads)):
               #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
@@ -113,10 +113,10 @@ def train(pretrain_set, train_set, test_set, val_set,
               #      gradient_sizes.append(numpy.linalg.norm(gradients))        
         train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
-        test_cost, test_risk, test_features = forward(test_set['X'], test_set['O'], test_set['A'], 0)
+        test_cost, test_risk, test_features = test(test_set['X'], test_set['O'], test_set['A'], 0)
         test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
 
-        val_cost, val_risk, val_features = forward(val_set['X'], val_set['O'], val_set['A'], 0)
+        val_cost, val_risk, val_features = test(val_set['X'], val_set['O'], val_set['A'], 0)
         val_c_index = survivalAnalysis.c_index(val_risk, val_set['T'], 1 - val_set['O'])
         
         cindex_train.append(train_c_index)

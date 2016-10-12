@@ -5,7 +5,6 @@ import os
 import scipy.io as sio
 from survivalnet.optimization import SurvivalAnalysis
 import numpy as np
-import Bayesian_Optimization as BayesOpt
 from survivalnet.train import train
 import theano
 import shutil
@@ -32,12 +31,12 @@ def Run():
   #X = (X - np.min(X, axis = 0))/(np.max(X, axis = 0) - np.min(X, axis=0))
   # Use Bayesian Optimization for model selection, 
   #if false, manually set parameters will be used
-  doBayesOpt = True
-  opt = 'GDLS'    
+  doBayesOpt = False
+  opt = 'GD'    
   #pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000, 'pt_batchsize':None,'corruption_level':.3}
   pretrain_config = None         #No pre-training 
-  numberOfShuffles = 20
-  ft = np.multiply(np.ones((numberOfShuffles, 1)), 100)
+  numberOfShuffles = 1
+  ft = np.multiply(np.ones((numberOfShuffles, 1)), 1)
   shuffleResults =[]
   avg_cost = 0
   i = 0 
@@ -53,8 +52,8 @@ def Run():
       lambda2 = bo_params[5]
     else:
       n_layers = 1
-      n_hidden = 1000
-      do_rate = 0
+      n_hidden = 100
+      do_rate = 0.5
       lambda1 = 0
       lambda2 = 0
       #nonlin = theano.tensor.nnet.relu

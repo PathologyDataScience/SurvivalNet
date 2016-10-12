@@ -188,7 +188,7 @@ class Model(object):
         #call the optimization function
         opt = Opt()
         
-        forward = theano.function(
+        test = theano.function(
             on_unused_input='ignore',
             inputs=[X, Observed, AtRisk, is_train],
             outputs=[self.riskLayer.cost(self.o, self.AtRisk), self.riskLayer.output, self.riskLayer.input],
@@ -198,11 +198,12 @@ class Model(object):
                 self.AtRisk: AtRisk,
                 self.is_train:is_train
             },
-            name='forward'
+            name='test'
         )
-        backward = theano.function(
+        train = theano.function(
             on_unused_input='ignore',
             inputs=[X, Observed, AtRisk, is_train],
+            outputs=[self.riskLayer.cost(self.o, self.AtRisk), self.riskLayer.output, self.riskLayer.input],
             updates=opt.SGD(self.riskLayer.cost(self.o, self.AtRisk) - self.L1 - self.L2_sqr, self.params, learning_rate),
             givens={
                 self.x: X,
@@ -210,9 +211,9 @@ class Model(object):
                 self.AtRisk: AtRisk,
                 self.is_train:is_train
             },
-            name='backward'
+            name='train'
         )
-        return forward, backward
+        return test, train
 
     def reset_weight(self, params):
         for i in xrange(self.n_layers):
