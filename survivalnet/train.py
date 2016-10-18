@@ -20,11 +20,10 @@ def train(pretrain_set, train_set, test_set, val_set,
         
     # changed to theano shared variable in order to do minibatch
     #train_set = theano.shared(value=train_set, name='train_set')
-    
+
     # numpy random generator
     numpy_rng = numpy.random.RandomState()
     #if disp: print '... building the model'
-
     # construct the stacked denoising autoencoder and the corresponding regression network
     model = Model(
         numpy_rng = numpy_rng,
@@ -88,21 +87,29 @@ def train(pretrain_set, train_set, test_set, val_set,
     #gradient_sizes = []
     plt.figure(1)
     plt.ion()
+
     if optim == 'BFGS':        
         bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
     elif optim == 'GDLS':
-	gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
+        gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
     survivalAnalysis = SurvivalAnalysis()    
-    epoch = 0
-    while epoch < finetune_config['ft_epochs']:
-        #print epoch    
-        train_cost, train_risk, train_features = train(train_set['X'], train_set['O'], train_set['A'], 1)
-	#print train_features.mean()
+
+    # Start training routine
+    for epoch in range(finetune_config['ft_epochs']):
+
+        # Create masks for training
+        train_masks = [numpy_rng.binomial(n=1, p=1-dropout_rate, size=(train_set['X'].shape[0], n_hidden)) for i in range(n_layers)]
+        
+        # Create dummy masks for testing
+        test_masks = [numpy.ones((test_set['X'].shape[0], n_hidden), dtype='int64') for i in range(n_layers)]
+
+        train_cost, train_risk, train_features = train(train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
         if optim == 'BFGS':        
             bfgs.BFGS()	
             #gradient_sizes.append(numpy.linalg.norm(bfgs.gf_t))        
         elif optim == 'GDLS':        
-            gdls.GDLS()	
+            gdls.GDLS(train_masks)
+
 #        elif optim == 'GD':
             #idx = 0
  #           backward(train_set['X'], train_set['O'], train_set['A'], 1)
@@ -111,19 +118,19 @@ def train(pretrain_set, train_set, test_set, val_set,
               #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
               #      idx += grads[i].size
               #      gradient_sizes.append(numpy.linalg.norm(gradients))        
+        print "start testing " 
         train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
-        test_cost, test_risk, test_features = test(test_set['X'], test_set['O'], test_set['A'], 0)
+        test_cost, test_risk, test_features = test(test_set['X'], test_set['O'], test_set['A'], 0, *test_masks)
         test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
 
-        val_cost, val_risk, val_features = test(val_set['X'], val_set['O'], val_set['A'], 0)
+        val_cost, val_risk, val_features = test(val_set['X'], val_set['O'], val_set['A'], 0, *test_masks)
         val_c_index = survivalAnalysis.c_index(val_risk, val_set['T'], 1 - val_set['O'])
         
         cindex_train.append(train_c_index)
         cindex_test.append(test_c_index)
         cindex_val.append(val_c_index)
 
-                
         train_cost_list.append(train_cost)
         test_cost_list.append(test_cost)
         val_cost_list.append(val_cost)
@@ -144,7 +151,6 @@ def train(pretrain_set, train_set, test_set, val_set,
             check, maxIter = isOverfitting(numpy.asarray(cindex_test))
             if check:                
                 print "Training Stopped Due to Overfitting! cindex = %f, MaxIter = %d" %(cindex_test[maxIter], maxIter)
-                
                 break
 	else: maxIter = epoch
     	sys.stdout.flush()

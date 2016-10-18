@@ -44,6 +44,7 @@ def _line_search_wolfe12(f, fprime, xk, pk, gfk, old_fval, old_old_fval,
 class GDLS(object):
 
     def __init__(self, model, x, o, atrisk):
+        
         self.cost = model.riskLayer.cost
         self.params = model.params
         is_tr = T.iscalar('is_train')
@@ -58,17 +59,20 @@ class GDLS(object):
         #print self.theta_shape
         
         self.theta = theano.shared(value=numpy.zeros(self.theta_shape, dtype=theano.config.floatX))
-        self.theta.set_value(numpy.concatenate([e.get_value().ravel() for e in
-            self.params]), borrow = "true")
-            
+        self.theta.set_value(numpy.concatenate([e.get_value().ravel() for e in self.params]), borrow = "true")
+        
+        # Initialization for dropout masks
+        is_update = T.iscalar('is_update')          
+
+
         self.gradient = theano.function(on_unused_input='ignore',
-                                   inputs=[is_tr],
+                                   inputs=[is_tr] + model.masks,
                                    outputs = T.grad(self.cost(o, atrisk) - model.L1 - model.L2_sqr, self.params),
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
 #                                   mode = NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True),
                                    name='gradient')
         self.cost_func = theano.function(on_unused_input='ignore',
-                                   inputs=[is_tr],
+                                   inputs=[is_tr] + model.masks,
                                    outputs = self.cost(o, atrisk) - model.L1 - model.L2_sqr,
                                    givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
 #                                   mode = NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True),
@@ -87,7 +91,7 @@ class GDLS(object):
             self.params[i].set_value(p)
         #print "params diff:", sum(sum(abs(params[0].get_value() - tmp)))
 
-        c = -self.cost_func(1) 
+        c = -self.cost_func(1, *self.masks) 
         #print "cost =", c
         return c
   
@@ -103,7 +107,7 @@ class GDLS(object):
             idx += self.params[i].get_value().size
             self.params[i].set_value(p)
 
-        gs = self.gradient(1)
+        gs = self.gradient(1, *self.masks)
         gf = numpy.concatenate([g.ravel() for g in gs])
         #print "gcost = ", -gf
         return -gf
@@ -116,12 +120,12 @@ class GDLS(object):
         self.gf_t = fprime(x0)
         self.rho_t = -self.gf_t
         try:
-            #print "starting line search:"
+            print "starting line search:"
             self.eps_t, fc, gc, self.old_fval, self.old_old_fval, gf_next = \
                  _line_search_wolfe12(f, fprime, self.theta_t, self.rho_t, self.gf_t,
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
         except _LineSearchError:
-            #print 'Line search failed to find a better solution.\n'         
+            print 'Line search failed to find a better solution.\n'         
             self.stop = True
             theta_next = self.theta_t + self.gf_t * .00001 
             return theta_next
@@ -129,13 +133,12 @@ class GDLS(object):
         theta_next = self.theta_t + self.eps_t * self.rho_t
         return theta_next 
  
-    def GDLS(self):
-	of = self.gd_ls
-	theta_val = of(
-                    f=self.f,
-                    x0=self.theta.get_value(),
-                    fprime=self.fprime,
-		    )
+    def GDLS(self, masks):
+        self.masks = masks
+        of = self.gd_ls
+        theta_val = of(f=self.f,
+                        x0=self.theta.get_value(),
+                        fprime=self.fprime)
         self.theta.set_value(theta_val)
         """theta_val,_,_ = of(
                     func=self.f,
