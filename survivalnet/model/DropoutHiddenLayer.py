@@ -17,9 +17,10 @@ class DropoutHiddenLayer(HiddenLayer):
         self.dropout_rate = dropout_rate
         self.srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
         self.mask = mask
+        self.layer = self.output
 
         # Compute outputs for train and test phase applying dropout when necessary
-        train_output = layer * T.cast(self.mask, theano.config.floatX)
+        train_output = self.layer * T.cast(self.mask, theano.config.floatX)
         test_output = self.output * (1 - dropout_rate)
         self.output = ifelse(T.eq(is_train, 1), train_output, test_output)
         return
