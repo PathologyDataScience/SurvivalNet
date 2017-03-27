@@ -65,6 +65,10 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     # generate risk derivative profiles for cohort
     print "Generting risk gradient profiles..."
     Gradients = RiskCohort(Model, Normalized)
+    
+    # normalize risk derivative profiles
+    Gradients = Gradients / np.outer(np.linalg.norm(Gradients, axis=1),
+                                     np.ones((1, Gradients.shape[1])))
 
     # re-order symbols, raw features, gradients by mean gradient value, trim
     Means = np.asarray(np.mean(Gradients, axis=0))
