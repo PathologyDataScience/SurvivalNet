@@ -9,20 +9,19 @@ from optimization import BFGS
 from optimization import GDLS
 from optimization import SurvivalAnalysis 
 from optimization import isOverfitting
-import matplotlib.pyplot as plt
 
 
 def train(pretrain_set, train_set, test_set, val_set,
              pretrain_config, finetune_config, n_layers=10, n_hidden=140, coxphfit=False,
              dropout_rate=0.5, non_lin=None, optim = 'GD', lambda1=0, lambda2=0, disp = True, earlystp = True):    
     finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
-    learning_rate_decay = .989    
+    learning_rate_decay = 1 
         
     # changed to theano shared variable in order to do minibatch
     #train_set = theano.shared(value=train_set, name='train_set')
 
     # numpy random generator
-    numpy_rng = numpy.random.RandomState()
+    numpy_rng = numpy.random.RandomState(1111)
     #if disp: print '... building the model'
     # construct the stacked denoising autoencoder and the corresponding regression network
     model = Model(
@@ -85,8 +84,8 @@ def train(pretrain_set, train_set, test_set, val_set,
     test_cost_list = []
     val_cost_list = []
     #gradient_sizes = []
-    plt.figure(1)
-    plt.ion()
+    #plt.figure(1)
+    #plt.ion()
 
     if optim == 'BFGS':        
         bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
@@ -118,7 +117,6 @@ def train(pretrain_set, train_set, test_set, val_set,
               #      gradients[idx:idx + grads[i].size] = grads[i].ravel()
               #      idx += grads[i].size
               #      gradient_sizes.append(numpy.linalg.norm(gradients))        
-        print "start testing " 
         train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
              
         test_cost, test_risk, test_features = test(test_set['X'], test_set['O'], test_set['A'], 0, *test_masks)
@@ -134,15 +132,15 @@ def train(pretrain_set, train_set, test_set, val_set,
         train_cost_list.append(train_cost)
         test_cost_list.append(test_cost)
         val_cost_list.append(val_cost)
-        if disp:
-            x = numpy.arange(0,epoch+1)
-            plt.clf()
-            plt.subplot(1,2,1)        
+#        if disp:
+#            x = numpy.arange(0,epoch+1)
+#            plt.clf()
+#            plt.subplot(1,2,1)        
 
-            plt.plot(x, numpy.asarray(train_cost_list)/train_set['X'].shape[0], 'r--', x, numpy.asarray(test_cost_list)/test_set['X'].shape[0], 'b--', x, numpy.asarray(val_cost_list)/val_set['X'].shape[0], 'g--')
-            plt.subplot(1,2,2)        
-            plt.plot(x, numpy.asarray(cindex_train), 'r--', x, numpy.asarray(cindex_test), 'g--', x, numpy.asarray(cindex_val), 'b--')
-            plt.pause(0.05)
+#            plt.plot(x, numpy.asarray(train_cost_list)/train_set['X'].shape[0], 'ro', x, numpy.asarray(test_cost_list)/test_set['X'].shape[0], 'g--', x, numpy.asarray(val_cost_list)/val_set['X'].shape[0], 'bs')
+#            plt.subplot(1,2,2)        
+#            plt.plot(x, numpy.asarray(cindex_train), 'ro', x, numpy.asarray(cindex_test), 'g--', x, numpy.asarray(cindex_val), 'bs')
+#            plt.pause(0.05)
 
         if disp: 
             print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
@@ -161,5 +159,5 @@ def train(pretrain_set, train_set, test_set, val_set,
     	if numpy.isnan(test_cost): break 
     if disp: 
 	print 'best score is: %f' % max(cindex_test)
-        plt.savefig('fig1.pdf')
-    return train_cost_list, cindex_train, test_cost_list, cindex_test, model, maxIter
+ #       plt.savefig('fig2.pdf')
+    return train_cost_list, cindex_train, test_cost_list, cindex_test, train_risk, test_risk, model, maxIter
