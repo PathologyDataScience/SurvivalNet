@@ -1,5 +1,5 @@
 # SurvivalNet
-Survival net is an automated pipeline for survival analysis using deep learning, implemented . It features the following functionalities:
+Survival net is an automated pipeline for survival analysis using deep learning, implemented in python using Theano to be compatible with current GPUs. It features the following functionalities:
 
 * Training deep fully connected networks with Cox partial likelihood for survival analysis.
 * Layer-wise unsupervised pre-training of the network
