@@ -9,20 +9,20 @@ sys.path.append('./../')
 import bayesopt
 import numpy as np
 from time import clock
-from CostFunction import cost_func, panorg_cost_func
+from CostFunction import cost_func, OBU_cost_func, OVBRCA_cost_func, LUADSC_cost_func
 import theano
 
 def tune(i):
     params = {}
-    params['n_iterations'] = 100
+    params['n_iterations'] = 50
     params['n_iter_relearn'] = 1
     params['n_init_samples'] = 2
     
     print "*** Model Selection with BayesOpt ***"
-    n = 5                # n dimensions
-# params: #layer, width, dropout, L2reg, nonlinearity 
-    lb = np.array([1,  10, .0, 0, i])
-    ub = np.array([5, 500, .9, 1, i+.5])
+    n = 7                # n dimensions
+# params: #layer, width, dropout, nonlinearity, l1_rate, l2_rate
+    lb = np.array([1, 10, .0, 0, 0, 0, i])
+    ub = np.array([2, 1000, .0, 1, 1, 0, i+.5])
 
     start = clock()
     mvalue, x_out, error = bayesopt.optimize(cost_func, n, lb, ub, params)

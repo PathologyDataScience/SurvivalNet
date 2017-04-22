@@ -3,10 +3,7 @@ import sys
 sys.path.append('./..')
 import os
 import scipy.io as sio
-from time import clock
 from survivalnet.optimization import SurvivalAnalysis
-import Bayesian_Optimization as BayesOpt
-import cPickle
 import numpy as np
 from survivalnet.train import train
 import theano
@@ -34,12 +31,12 @@ def Run():
   #X = (X - np.min(X, axis = 0))/(np.max(X, axis = 0) - np.min(X, axis=0))
   # Use Bayesian Optimization for model selection, 
   #if false, manually set parameters will be used
-  doBayesOpt = True
-  opt = 'GDLS'    
+  doBayesOpt = False
+  opt = 'GD'    
   #pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000, 'pt_batchsize':None,'corruption_level':.3}
   pretrain_config = None         #No pre-training 
-  numberOfShuffles = 20
-  ft = np.multiply(np.ones((numberOfShuffles, 1)), 40)
+  numberOfShuffles = 1
+  ft = np.multiply(np.ones((numberOfShuffles, 1)), 1)
   shuffleResults =[]
   avg_cost = 0
   i = 0 
@@ -51,10 +48,14 @@ def Run():
       n_hidden = bo_params[1]
       do_rate = bo_params[2]
       nonlin = theano.tensor.nnet.relu if bo_params[3]>.5 else np.tanh
+      lambda1 = bo_params[4]
+      lambda2 = bo_params[5]
     else:
-      n_layers = 2
-      n_hidden = 500
-      do_rate = .35
+      n_layers = 1
+      n_hidden = 100
+      do_rate = 0.5
+      lambda1 = 0
+      lambda2 = 0
       #nonlin = theano.tensor.nnet.relu
       nonlin = np.tanh 
 
@@ -78,17 +79,19 @@ def Run():
 
     train_set = {}
     test_set = {}
-
+    val_set = {}
     #caclulate the risk group for every patient i: patients who die after i
     sa = SurvivalAnalysis()    
-    finetune_config = {'ft_lr':0.01, 'ft_epochs':ft[i]}
-    train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[fold_size:], T[fold_size:], O[fold_size:]);
+    finetune_config = {'ft_lr':0.0001, 'ft_epochs':ft[i]}
+    train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X[2*fold_size:], T[2*fold_size:], O[2*fold_size:]);
     #train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X, T, O);
     test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X[:fold_size], T[:fold_size], O[:fold_size]);
+    val_set['X'], val_set['T'], val_set['O'], val_set['A'] = sa.calc_at_risk(X[fold_size:2*fold_size], T[fold_size:2*fold_size], O[fold_size:2*fold_size]);
+
     print '***Model Assesment***'
-    train_cost_list, cindex_train, test_cost_list, cindex_test, model, _ = train(pretrain_set, train_set, test_set,
+    train_cost_list, cindex_train, test_cost_list, cindex_test, model, _ = train(pretrain_set, train_set, test_set, val_set,
     pretrain_config, finetune_config, n_layers, n_hidden, coxphfit=False,
-    dropout_rate=do_rate, non_lin = nonlin, optim = opt, disp = True, earlystp = False )
+    dropout_rate=do_rate, lambda1=lambda1, lambda2=lambda2, non_lin = nonlin, optim = opt, disp = True, earlystp = False )
     i = i + 1
     shuffleResults.append(cindex_test[-1])
     avg_cost += cindex_test[-1]
