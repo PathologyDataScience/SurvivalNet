@@ -72,18 +72,22 @@ def _RiskBackpropagate(Model, Features):
     AtRisk = T.ivector('AtRisk')
     Observed = T.ivector('Observed')
     Is_train = T.scalar('Is_train', dtype='int32')
+	masks = T.lmatrix('mask_' + str(0))
     partial_derivative = th.function(on_unused_input='ignore',
-                                     inputs=[X, AtRisk, Observed, Is_train],
+                                     inputs=[X, AtRisk, Observed, Is_train, masks],
                                      outputs=T.grad(Model.riskLayer.output[0],
                                                     Model.x),
                                      givens={Model.x: X, Model.o: AtRisk,
                                              Model.AtRisk: Observed,
-                                             Model.is_train: Is_train},
+                                             Model.is_train: Is_train,
+											 Model.masks[0]: masks},
                                      name='partial_derivative')
 
     # define parameters for risk and calculate partial
     sample_O = np.array([0]).astype(np.int32)
     sample_T = np.array([0]).astype(np.int32)
-    Gradient = partial_derivative(Features, sample_O, sample_T, 0)
+   	# Create dummy masks for graph
+	dummy_masks = np.ones((1, Model.n_hidden), dtype='int64')
+	Gradient = partial_derivative(Features, sample_O, sample_T, 0, dummy_masks)
 
     return Gradient
