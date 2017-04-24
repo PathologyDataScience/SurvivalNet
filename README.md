@@ -8,4 +8,9 @@ Survival net is an automated pipeline for survival analysis using deep learning.
 
 A short paper descibing this software and its performance compared to Cox+ElasticNet and Random Survival Forests was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf).
 
+In the **examples** folder you can find script to:
 
+* Train a neural network on your dataset using Bayesian Optimization (Run.py)
+* Set parameters for Bayesian Optimizaiton (BayesianOptimization.py)
+* Define a cost function for use by Bayesian Optimization (CostFunction.py)
+* Interpret a trained model and analyse feature importance (ModelAnalysis.py)
