@@ -7,6 +7,4 @@ output/
 build
 dist
 *.egg-info
-Cost_Function.py
-Bayesian_Optimization.py
 *.out
