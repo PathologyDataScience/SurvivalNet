@@ -95,7 +95,6 @@ class GDLS(object):
         #print "cost =", c
         return c
   
-    
     #@profile
     def fprime(self, theta_val):
         #model.reset_weight(params)
@@ -120,7 +119,6 @@ class GDLS(object):
         self.gf_t = fprime(x0)
         self.rho_t = -self.gf_t
         try:
-            print "starting line search:"
             self.eps_t, fc, gc, self.old_fval, self.old_old_fval, gf_next = \
                  _line_search_wolfe12(f, fprime, self.theta_t, self.rho_t, self.gf_t,
                                       self.old_fval, self.old_old_fval, amin=1e-100, amax=1e100)
@@ -140,11 +138,6 @@ class GDLS(object):
                         x0=self.theta.get_value(),
                         fprime=self.fprime)
         self.theta.set_value(theta_val)
-        """theta_val,_,_ = of(
-                    func=self.f,
-                    x0=self.theta.get_value(),
-                    fprime=self.fprime)
-        self.theta.set_value(theta_val)"""
         idx = 0
         for i in range(len(self.params)):
             p = self.theta.get_value()[idx:idx + self.params[i].get_value().size]
