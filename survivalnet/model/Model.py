@@ -62,7 +62,7 @@ class Model(object):
             theano_rng = RandomStreams(numpy_rng.randint(2 ** 30))
 
         # Allocate symbolic variables for the data
-        self.x = T.matrix('x')                                                                  # Expression data
+        self.x = T.matrix('x', dtype='float32')                                                 # Expression data
         self.o = T.ivector('o')                                                                 # Observed death or not, 1 is death, 0 is right censored
         self.AtRisk = T.ivector('AtRisk')        
         self.is_train = T.iscalar('is_train')                                                   # Indicator of training/testing used in dropout
@@ -173,7 +173,7 @@ class Model(object):
     def build_finetune_functions(self, learning_rate):
         
         is_train = T.iscalar('is_train')
-        X = T.matrix('X')
+        X = T.matrix('X', dtype='float32')
         AtRisk = T.ivector('AtRisk')
         Observed = T.ivector('Observed')
         #call the optimization function
