@@ -1,6 +1,5 @@
 import argparse
 import sys
-sys.path.append('./..')
 import Bayesian_Optimization as BayesOpt
 import os
 import scipy.io as sio
@@ -10,7 +9,7 @@ from survivalnet.train import train
 import theano
 import cPickle
 
-N_SHUFFLES = 2
+N_SHUFFLES = 20
 
 def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):      
 	if not os.path.exists(output_path):
@@ -126,7 +125,7 @@ if __name__ == '__main__':
 	parser.add_argument('-key', '--feature_key', dest='feature_key', 
 			default='Integ_X',
 			help='Name of input features in the .mat file.')
-	parser.add_argument('-i', '--epochs', dest='epochs', default=10,
+	parser.add_argument('-i', '--epochs', dest='epochs', default=40,
 			help='Number of training epochs.')
 	args = parser.parse_args()
 	Run(args.input_path, args.output_path, args.do_bayes_opt, args.feature_key, 
