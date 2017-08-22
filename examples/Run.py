@@ -92,9 +92,10 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 			lambda1 = 0
 			lambda2 = 0
 			nonlin = np.tanh # or nonlin = theano.tensor.nnet.relu
-
-		expID = 'nl' + str(n_layers) + '-' + 'hs' + str(n_hidden) + '-' + \
-				'dor'+ str(do_rate) + '-id' + str(i)       
+			
+		# Prints experiment identifier.         
+		expID = 'nl{}-hs{}-dor{}_nonlin{}_id{}'.format(
+				str(n_layers), str(n_hidden), str(do_rate), str(nonlin), str(i)) 
 
 		finetune_config = {'ft_lr':0.0001, 'ft_epochs':epochs}
 
