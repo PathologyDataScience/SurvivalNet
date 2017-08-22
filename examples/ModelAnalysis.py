@@ -1,23 +1,20 @@
 import pickle
 import scipy.io as sio 
 import survivalnet as sn
-import os
 
-# #############################################################################
-# Integrated models ###########################################################
-# #############################################################################
-# define model/dataset pairs
-ModelPaths = ['./models/']
+# Integrated models. 
+# Defines model/dataset pairs.
+ModelPaths = ['../models/']
 Models = ['nl1-hs10-dor0.62-id0final_model']
-Data = ['./data/Brain_Integ.mat']
+Data = ['i../data/Brain_Integ.mat']
 
-# load datasets and perform feature analysis
+# Loads datasets and performs feature analysis.
 for i, Path in enumerate(ModelPaths):
 
-	# load normalized data
+	# Loads normalized data.
 	X = scipy.io.loadmat(Data[i])
 
-	# extract relevant values
+	# Extracts relevant values.
 	Samples = X['Patients']
 	Normalized = X['Integ_X']
 	Raw = X['Integ_X_raw']
@@ -25,7 +22,7 @@ for i, Path in enumerate(ModelPaths):
 	Survival = X['Survival']
 	Censored = X['Censored']
 
-	# load model
+	# Loads model.
 	f = open(Path + Models[i], 'rb')
 	Model = pickle.load(f)
 	f.close()
