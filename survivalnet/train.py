@@ -10,20 +10,50 @@ from optimization import GDLS
 from optimization import SurvivalAnalysis 
 from optimization import isOverfitting
 
+LEARNING_RATE_DECAY = 1 
 
-def train(pretrain_set, train_set, test_set,
-		pretrain_config, finetune_config, n_layers=10, n_hidden=140, 
-		dropout_rate=0.5, non_lin=None, optim = 'GD', lambda1=0, lambda2=0, verbose = True, earlystp = True):    
-	finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'], dtype=theano.config.floatX))
-	learning_rate_decay = 1 
+def train(pretrain_set, train_set, test_set, pretrain_config, finetune_config,
+		  n_layers, n_hidden, dropout_rate, non_lin,
+		  optim='GD', lambda1=0, lambda2=0, verbose=True, earlystp=True):    
 
-	# changed to theano shared variable in order to do minibatch
-	#train_set = theano.shared(value=train_set, name='train_set')
+	"""Creates and trains a feedforward neural network.
+	Arguments:
+		pretrain_set: dict. Contains pre-training data (nxp array). If None, no
+					  pre-training is performed.
+		train_set: dict. Contains training data (nxp array), labels (nx1 array),
+				  censoring status (nx1 array) and at risk indices (nx1 array).
+		test_set: dict. Contains testing data (nxp array), labels (nx1 array),
+				  censoring status (nx1 array) and at risk indices (nx1 array).
+		pretrain_config: dict. Contains pre-training parameters.
+		finetune_config: dict. Contains finetuning parameters.
+		n_layers: int. Number of layers in neural network.
+		n_hidden: int. Number of hidden units in each layer.
+		dropout_rate: float. Probability of dropping units.
+		non_lin: theano.Op or function. Type of activation function. Linear if None.
+		optim: str. Optimization algorithm to use. One of 'GD', 'GDLS', and 'BFGS'.
+		lambda1: flaot. L1 regularization rate.
+		lambda2: float. L2 regularization rate.
+		verbose: bool. Whether to log progress to stderr.
+		earlystp: bool. Whether to use early stopping.
+	
+	Outputs:
+		train_costs: 1D array. Loss value on training data at each epoch.
+		train_cindices: 1D array. C-index values on training data at each epoch.
+		test_costs: 1D array. Loss value on testing data at each epoch.
+		test_cindices: 1D array. C-index values on testing data at each epoch.
+		train_risk: 1D array. Final predicted risks for all patients in training set.
+		test_risk: 1D array. Final predicted risks for all patients in test set.
+		model: Model. Final trained model.
+		max_iter: int. Number of training epochs. Equal to 
+				  finetune_config['ft_epochs'] or smaller if earlystp is True.
+	"""
+	finetune_lr = theano.shared(numpy.asarray(finetune_config['ft_lr'],
+								dtype=theano.config.floatX))
 
-	# numpy random generator
 	numpy_rng = numpy.random.RandomState(1111)
-	#if verbose: print '... building the model'
-	# construct the stacked denoising autoencoder and the corresponding regression network
+	
+	# Construct the stacked denoising autoencoder and the corresponding
+	# supervised survival network.
 	model = Model(
 			numpy_rng = numpy_rng,
 			n_ins = train_set['X'].shape[1],
@@ -38,12 +68,11 @@ def train(pretrain_set, train_set, test_set,
 	# PRETRAINING THE MODEL #
 	#########################
 	if pretrain_config is not None:
-		n_train_batches = len(train_set) / pretrain_config['pt_batchsize'] if pretrain_config['pt_batchsize'] else 1
+		n_batches = len(train_set) / (pretrain_config['pt_batchsize'] or len(train_set))
 
-		if verbose: print '... getting the pretraining functions'
-		pretraining_fns = model.pretraining_functions(pretrain_set,
+		pretraining_fns = model.pretraining_functions(
+				pretrain_set,
 				pretrain_config['pt_batchsize'])
-		if verbose: print '... pre-training the model'
 		start_time = timeit.default_timer()
 		# de-noising level
 		corruption_levels = [pretrain_config['corruption_level']] * n_layers
@@ -52,34 +81,27 @@ def train(pretrain_set, train_set, test_set,
 			for epoch in xrange(pretrain_config['pt_epochs']):
 				# go through the training set
 				c = []
-				for batch_index in xrange(n_train_batches):
+				for batch_index in xrange(n_batches):
 					c.append(pretraining_fns[i](index=batch_index,
 						corruption=corruption_levels[i],
 						lr=pretrain_config['pt_lr']))
 
-					if verbose: print "Pre-training layer %i, epoch %d, cost" % (i, epoch),
-				if verbose: print numpy.mean(c)
+					if verbose: 
+						print 'Pre-training layer {}, epoch {}, cost'.format(i, epoch, numpy.mean(c))
 
 		end_time = timeit.default_timer()
+		if verbose: 
+			print('Pretraining took {} minutes.'.format((end_time - start_time) / 60.))
 
-		if verbose: print >> sys.stderr, ('The pretraining code for file ' +
-				os.path.split(__file__)[1] +
-				' ran for %.2fm' % ((end_time - start_time) / 60.))
-
-		########################
+	########################
 	# FINETUNING THE MODEL #
 	########################
+	test, train = model.build_finetune_functions(learning_rate=finetune_lr)
 
-	#if verbose: print '... getting the finetuning functions'
-	test, train = model.build_finetune_functions(
-			learning_rate=finetune_lr
-			)
-
-	#if verbose: print '... finetunning the model'
-	cindex_train = []
-	cindex_test = []
-	train_cost_list = []
-	test_cost_list = []
+	train_cindices = []
+	test_cindices = []
+	train_costs = []
+	test_costs = []
 
 	if optim == 'BFGS':        
 		bfgs = BFGS(model, train_set['X'], train_set['O'], train_set['A'])
@@ -87,48 +109,66 @@ def train(pretrain_set, train_set, test_set,
 		gdls = GDLS(model, train_set['X'], train_set['O'], train_set['A'])
 	survivalAnalysis = SurvivalAnalysis()    
 
-	# Start training routine
+	# Starts the training routine.
 	for epoch in range(finetune_config['ft_epochs']):
 
-		# Create masks for training
-		train_masks = [numpy_rng.binomial(n=1, p=1-dropout_rate, size=(train_set['X'].shape[0], n_hidden)) for i in range(n_layers)]
+		# Creates masks for dropout during training.
+		train_masks = [
+			numpy_rng.binomial(n=1, p=1-dropout_rate, 
+							   size=(train_set['X'].shape[0], n_hidden))
+			for i in range(n_layers)]
 
-		# Create dummy masks for testing
-		test_masks = [numpy.ones((test_set['X'].shape[0], n_hidden), dtype='int64') for i in range(n_layers)]
+		# Creates dummy masks for testing.
+		test_masks = [
+			numpy.ones((test_set['X'].shape[0], n_hidden), dtype='int64')
+			for i in range(n_layers)]
 
+		# BFGS() and GDLS() update the gradients, so we only serve (test) the
+		# model to calculate cost, risk, and cindex on training set.
 		if optim == 'BFGS':        
 			bfgs.BFGS()
-			train_cost, train_risk, train_features = test(train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
+			train_cost, train_risk, train_features = test(
+				train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
 		elif optim == 'GDLS':        
 			gdls.GDLS(train_masks)
-			train_cost, train_risk, train_features = test(train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
+			train_cost, train_risk, train_features = test(
+				train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
+		# In case of GD, uses the train function to update the gradients and get
+		# training cost, risk, and cindex at the same time.
 		elif optim == 'GD':
-			train_cost, train_risk, train_features = train(train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
+			train_cost, train_risk, train_features = train(
+				train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
+		train_ci = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
+	
+		# Calculates testing cost, risk and cindex using th eupdated model.
+		test_cost, test_risk, _ = test(test_set['X'], test_set['O'], test_set['A'], 0, *test_masks)
+		test_ci = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
 
-		train_c_index = survivalAnalysis.c_index(train_risk, train_set['T'], 1 - train_set['O'])
-		test_cost, test_risk, test_features = test(test_set['X'], test_set['O'], test_set['A'], 0, *test_masks)
-		test_c_index = survivalAnalysis.c_index(test_risk, test_set['T'], 1 - test_set['O'])
+		train_cindices.append(train_ci)
+		test_cindices.append(test_ci)
 
-		cindex_train.append(train_c_index)
-		cindex_test.append(test_c_index)
-
-		train_cost_list.append(train_cost)
-		test_cost_list.append(test_cost)
+		train_costs.append(train_cost)
+		test_costs.append(test_cost)
 		if verbose: 
-			print 'epoch = %d, trn_cost = %f, trn_ci = %f, tst_cost = %f, tst_ci = %f' % (epoch, train_cost, train_c_index, test_cost, test_c_index)
+			print (('epoch = {}, trn_cost = {}, trn_ci = {}, tst_cost = {},'
+					' tst_ci = {}').format(epoch, train_cost, train_ci,
+										   test_cost, test_ci))
 		if earlystp and epoch >= 15 and (epoch % 5 == 0):
-			if verbose: print "Checking overfitting!"
-			check, maxIter = isOverfitting(numpy.asarray(cindex_test))
+			if verbose:
+				print 'Checking overfitting!'
+			check, max_iter = isOverfitting(numpy.asarray(test_cindices))
 			if check:                
-				print "Training Stopped Due to Overfitting! cindex = %f, MaxIter = %d" %(cindex_test[maxIter], maxIter)
+				print(('Training Stopped Due to Overfitting! cindex = {},'
+					   ' MaxIter = {}').format(test_cindices[max_iter], max_iter))
 				break
-		else: maxIter = epoch
+		else: max_iter = epoch
 		sys.stdout.flush()
-		decay_learning_rate = theano.function(inputs=[], outputs=finetune_lr, \
-				updates={finetune_lr: finetune_lr * learning_rate_decay})    
+		decay_learning_rate = theano.function(
+				inputs=[], outputs=finetune_lr,
+				updates={finetune_lr: finetune_lr * LEARNING_RATE_DECAY})    
 		decay_learning_rate()
 		epoch += 1
 		if numpy.isnan(test_cost): break 
 	if verbose: 
-		print 'best score is: %f' % max(cindex_test)
-	return train_cost_list, cindex_train, test_cost_list, cindex_test, train_risk, test_risk, model, maxIter
+		print 'C-index score after {} epochs is: {}'.format(max_iter, max(test_cindices))
+	return train_costs, train_cindices, test_costs, test_cindices, train_risk, test_risk, model, max_iter

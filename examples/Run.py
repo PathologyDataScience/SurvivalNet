@@ -14,7 +14,17 @@ N_SHUFFLES = 20
 def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):      
 	if not os.path.exists(output_path):
 		os.makedirs(output_path)
-	
+	"""Runs the model selection and assesment of survivalnet.
+
+	Arguments:
+	   input_path: str. Path to dataset. The input dataset in this script is
+	   			   expected to be a mat file contating 'Survival' and 'Censored'
+				   keys in addition the the feature_key.
+	   output_path: str. Path to save the model and results.
+	   do_bayes_opt: bool. Whether to do Bayesian optimization of hyperparams.
+	   feature_key: str. Key to the input data in the .mat file.
+	   epochs: int. Number of training epochs.
+	"""
 	# Loading dataset. The model requires a nxp matrix of input data, nx1 array
 	# of time to event labels, and nx1 array of censoring status.
 	D = sio.loadmat(input_path)
@@ -78,7 +88,7 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 
 		if do_bayes_opt == True:
 			print '***Model Selection with BayesOpt for shuffle', str(i), '***'
-			maxval, bo_params, err = BayesOpt.tune()
+			_, bo_params, _ = BayesOpt.tune()
 			n_layers = bo_params[0]
 			n_hidden = bo_params[1]
 			do_rate = bo_params[2]
@@ -110,6 +120,8 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 	outputFileName = output_path  + 'cis.mat'
 	sio.savemat(outputFileName, {'cis':cindex_results})
 	print np.mean(cindex_results), np.std(cindex_results)
+	
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog='Run',
 			formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -121,12 +133,12 @@ if __name__ == '__main__':
 			default='../results', 
 			help='Path specifying where to save output files.')
 	parser.add_argument('-bo', '--bayes_opt', dest='do_bayes_opt', 
-			default=False,
+			default=False, type=bool, 
 			help='Boolean specifying whether to do Bayesian Optimization.')
 	parser.add_argument('-key', '--feature_key', dest='feature_key', 
 			default='Integ_X',
 			help='Name of input features in the .mat file.')
-	parser.add_argument('-i', '--epochs', dest='epochs', default=40,
+	parser.add_argument('-i', '--epochs', dest='epochs', default=40, type=int,
 			help='Number of training epochs.')
 	args = parser.parse_args()
 	Run(args.input_path, args.output_path, args.do_bayes_opt, args.feature_key, 
