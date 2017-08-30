@@ -88,9 +88,9 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 
 		if do_bayes_opt == True:
 			print '***Model Selection with BayesOpt for shuffle', str(i), '***'
-			_, bo_params, _ = BayesOpt.tune()
-			n_layers = bo_params[0]
-			n_hidden = bo_params[1]
+			_, bo_params = BayesOpt.tune()
+			n_layers = int(bo_params[0])
+			n_hidden = int(bo_params[1])
 			do_rate = bo_params[2]
 			nonlin = theano.tensor.nnet.relu if bo_params[3]>.5 else np.tanh
 			lambda1 = bo_params[4]

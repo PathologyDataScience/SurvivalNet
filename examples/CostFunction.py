@@ -8,14 +8,14 @@ import cPickle
 
 LEARNING_RATE = 0.001
 EPOCHS = 40
+OPTIM = 'GDLS'
+
+
 def cost_func(params):
 	n_layers = int(params[0])
 	n_hidden = int(params[1])
 	do_rate = params[2]
-	if params[3] > .5:
-		nonlin = theano.tensor.nnet.relu
-	else: 
-		nonlin = np.tanh
+	nonlin = theano.tensor.nnet.relu if params[3] > .5 else np.tanh
 	lambda1 = params[4]
 	lambda2 = params[5]
 
@@ -36,8 +36,8 @@ def cost_func(params):
 	
 	_, _, val_costs, val_cindices, _, _, _, maxIter = train(pretrain_set,
 			train_set, val_set, pretrain_config, finetune_config, n_layers,
-			n_hidden, dropout_rate=do_rate, lambda1= lambda1, lambda2 = lambda2, 
-			non_lin=nonlin, optim = "GDLS", verbose = False, earlystp = False)
+			n_hidden, dropout_rate=do_rate, lambda1=lambda1, lambda2=lambda2, 
+			non_lin=nonlin, optim=OPTIM, verbose=False, earlystp=False)
 	
 	if not val_costs or np.isnan(val_costs[-1]):
 		print 'Skipping due to NAN'
