@@ -35,7 +35,7 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 	X = D[feature_key].astype('float32')
 
 	# Optimization algorithm.
-	opt = 'GD'    
+	opt = 'GDLS'    
 
 	# Pretraining settings
 	# pretrain_config = {'pt_lr':0.01, 'pt_epochs':1000,
@@ -127,14 +127,14 @@ if __name__ == '__main__':
 			formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 			description = 'Script to train survival net')
 	parser.add_argument('-ip', '--input_path', dest='input_path',
-			default='../data/Brain_Integ.mat', 
+			default='./data/Brain_Integ.mat', 
 			help='Path specifying location of dataset.')
 	parser.add_argument('-sp', '--output_path', dest='output_path',
-			default='../results', 
+			default='./results', 
 			help='Path specifying where to save output files.')
 	parser.add_argument('-bo', '--bayes_opt', dest='do_bayes_opt', 
-			default=False, type=bool, 
-			help='Boolean specifying whether to do Bayesian Optimization.')
+			default=False, action='store_true', 
+			help='Pass this flag if you want to do Bayesian Optimization.')
 	parser.add_argument('-key', '--feature_key', dest='feature_key', 
 			default='Integ_X',
 			help='Name of input features in the .mat file.')

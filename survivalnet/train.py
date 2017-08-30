@@ -126,7 +126,7 @@ def train(pretrain_set, train_set, test_set, pretrain_config, finetune_config,
 		# BFGS() and GDLS() update the gradients, so we only serve (test) the
 		# model to calculate cost, risk, and cindex on training set.
 		if optim == 'BFGS':        
-			bfgs.BFGS()
+			bfgs.BFGS(train_masks)
 			train_cost, train_risk, train_features = test(
 				train_set['X'], train_set['O'], train_set['A'], 1, *train_masks)
 		elif optim == 'GDLS':        
