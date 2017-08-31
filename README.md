@@ -25,3 +25,78 @@ Also sorted with respect to T.
 
 
 These vectors are packed into a dictionty D and passed to train (found in train.py module) as demonstrated in Run.py.
+
+
+
+
+
+
+
+
+
+
+## Installation Guide for Docker Image
+
+
+This project was build on Docker Platform for the easy use and the platform independency. The link for Docker Image is found [here](https://hub.docker.com/r/cramraj8/survivalnet2.0/).
+You can pull the Docker Image using this command on terminal.
+    
+    sudo docker pull cramraj8/survivalnet2.0
+
+
+Docker Image (***cramraj8/survivalnet2.0***) was built on top of Ubuntu-Docker Image. All the dependencies and libraries was added into the Docker Image. The *Bayesian Optimization* Python package was already installed inside the Docker Image. This ***Bayesian Optimization(BayesOpt package)*** can be located by */bayesopt/* folder.
+
+The survivalNet python package will be found inside the *Ubuntu-Docker* along with *BayesOpt* folder. 
+
+
+(Download and) Run the Docker Image (from Docker Hub) on local machine
+    
+    sudo docker run -it cramraj8/survivalnet2.0 /bin/bash
+
+
+This command will look for the **survivalnet2.0** Docker Image locally and if not found, then the Docker Engine will look at the Docker Hub.
+Once the Download is completed, a Docker Container will be created, and the terminal will turn into bash mode.
+
+
+
+Now you are inside the Docker Container.
+The project package is located inside the */SurvivalNet/* folder. 
+
+If you want to run the example python script, you can navigate into
+    
+    cd /SurvivalNet/examples/ 
+folder.
+There you can find some python scripts. But *Run.py* is the proper python script that can tell you about the deep learning progress.
+    
+    python Run.py
+will execute the python-script run command, and you will see the network’s learning process step by step.
+
+
+
+The data - ***Brain_Integ.mat*** is located inside the */SurvivalNet/data/* folder.
+By default, this data will be considered into the network learning process.
+
+
+
+Once you done with exploration of SurvivalNet package, 
+    
+    exit
+to exit the Docker Container.
+
+
+
+Now you can check the Docker Image existence by,
+    
+    sudo docker images 
+
+
+### For using your data to train the network from your local machine
+
+For using the SurvivalNet Package with Docker, there is no need to write Dockerfile to pull the Docker Image.
+    
+    sudo docker run -v /<hostmachine_data_path>/:/<container_data_path>/ -it cramraj8/survivalnet2.0 /bin/bash
+is enough to pull the Docker Image, run the container, and mount the host machine data directory with container data path.
+The container Data Path is usually be
+	***/SurvivalNet/data/<data_file_name>***
+  
+  
