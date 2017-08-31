@@ -75,10 +75,10 @@ def _RiskBackpropagate(Model, Features):
 	masks = T.lmatrix('mask_' + str(0))
 	partial_derivative = th.function(on_unused_input='ignore',
 			inputs=[X, AtRisk, Observed, Is_train, masks],
-			outputs=T.grad(Model.riskLayer.output[0],
+			outputs=T.grad(Model.risk_layer.output[0],
 				Model.x),
 			givens={Model.x: X, Model.o: AtRisk,
-				Model.AtRisk: Observed,
+				Model.at_risk: Observed,
 				Model.is_train: Is_train,
 				Model.masks[0]: masks},
 			name='partial_derivative')

@@ -10,7 +10,7 @@ from scipy.optimize.optimize import _line_search_wolfe12, _LineSearchError
 class BFGS(object):
 
 	def __init__(self, model, x, o, atrisk):
-		self.cost = model.riskLayer.cost
+		self.cost = model.risk_layer.cost
 		self.params = model.params
 		is_tr = T.iscalar('is_train')
 		self.theta_shape = sum([self.params[i].get_value().size for i in range(len(self.params))])
@@ -25,12 +25,12 @@ class BFGS(object):
 		self.gradient = theano.function(on_unused_input='ignore',
 				inputs=[is_tr] + model.masks,
 				outputs = T.grad(self.cost(o, atrisk), self.params),
-				givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
+				givens = {model.x:x, model.o:o, model.at_risk:atrisk, model.is_train:is_tr},
 				name='gradient')
 		self.cost_func = theano.function(on_unused_input='ignore',
 				inputs=[is_tr] + model.masks,
 				outputs = self.cost(o, atrisk),
-				givens = {model.x:x, model.o:o, model.AtRisk:atrisk, model.is_train:is_tr},
+				givens = {model.x:x, model.o:o, model.at_risk:atrisk, model.is_train:is_tr},
 				name='cost_func')   
 
 	def f(self, theta_val):
