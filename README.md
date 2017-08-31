@@ -1,42 +1,32 @@
 # SurvivalNet
-Survival net is an automated pipeline for survival analysis using deep learning. It is implemented in python using Theano to be compatible with current GPUs. It features the following functionalities:
+SurvivalNet is a package for building survival analysis models using deep learning. The SurvivalNet package has the following features:
 
-* Training deep fully connected networks with Cox partial likelihood for survival analysis.
-* Layer-wise unsupervised pre-training of the network
-* Automatic hyper-parameter tuning with Bayesian Optimization
-* Interpretation of the trained neural net based on partial derivatives
+* Training deep networks for time-to-event data using Cox partial likelihood
+* Automatic tuning of network architecture and learning hyper-parameters with Bayesian Optimization
+* Interpretation of trained networks using partial derivatives
+* Layer-wise unsupervised pre-training
 
-A short paper descibing this software and its performance compared to Cox+ElasticNet and Random Survival Forests was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf).
+A short paper descibing our approach of using Cox partial likelihood was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf). A [longer paper](https://doi.org/10.1101/131367) was later published describing the package and showing applications in BioRxiv.
 
-In the **examples** folder you can find scripts to:
+# Getting Started
+The **examples** folder provides scripts to:
 
 * Train a neural network on your dataset using Bayesian Optimization (Run.py)
 * Set parameters for Bayesian Optimizaiton (BayesianOptimization.py)
 * Define a cost function for use by Bayesian Optimization (CostFunction.py)
-* Interpret a trained model and analyse feature importance (ModelAnalysis.py)
+* Interpret a trained model and analyze feature importance (ModelAnalysis.py)
 
-The example scripts provided assume the data is a .mat file containinig, 'Survival', 'Censored', and either 'Integ\_X' or 'Gene\_X' depending on what feature set we are using. But the train module takes the following numpy arrays packed in a dictionary as input:
-
-* X: input data of size (number of patients, number of features). Patients must be sorted with respect to T.
-* T: sorted survival labels; either time of event or time to last follow-up. size: (number of patients, ).
-* O: observed status. Array of 1s and 0s. 1 means event is observed, 0 means sample is censored. size:(number of patients, ). 
-Also sorted with respect to T.
-* A: for patient _i_, the corresponding element in A is the index of the first patient in the at risk group of _i_. Look at Run.py for an example of how to calculate this vector using the provided functions. size:(number of patients, ).
-
+The Run.py training module takes as input a python dictionary containing the following numpy arrays:
+* X: input data of size (number of patients, number of features). Patients must be sorted with respect to event or censoring times 'T'.
+* T: Time of event or time to last follow-up, appearing in increasing order and corresponding to the rows of 'X'. size: (number of patients, ).
+* O: Right-censoring status. A value of 1 means the event is observed (i.e. deceased or disease progression), a 0 value indicates that the sample is censored. size:(number of patients, ).
+* A: An index array encoding the at-risk set for each sample. For sample _i_, the _i_ th element in A is the index of the next sample in the at risk group of _i_ (see Run.py for an example of how to calculate this vector using the provided functions) size:(number of patients, ).
 
 These vectors are packed into a dictionty D and passed to train (found in train.py module) as demonstrated in Run.py.
 
-
-
-
-
-
-
-
-
+The provided example scripts assume the data is a .mat file containinig, 'Survival', 'Censored', and either 'Integ\_X' or 'Gene\_X' depending on what feature set we are using.
 
 ## Installation Guide for Docker Image
-
 
 This project was build on Docker Platform for the easy use and the platform independency. The link for Docker Image is found [here](https://hub.docker.com/r/cramraj8/survivalnet2.0/).
 You can pull the Docker Image using this command on terminal.
