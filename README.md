@@ -28,65 +28,37 @@ The provided example scripts assume the data is a .mat file containinig, 'Surviv
 
 ## Installation Guide for Docker Image
 
-This project was build on Docker Platform for the easy use and the platform independency. The link for Docker Image is found [here](https://hub.docker.com/r/cramraj8/survivalnet2.0/).
-You can pull the Docker Image using this command on terminal.
+A Docker image for SurvivalNet is provided for those who prefer not to build from source. This image contains an installation of SurvivalNet on a bare Ubuntu operating system along with sample data used in our paper published in *Scientific Reports*. This helps users avoid installation of the */bayesopt/* package and other dependencies required by SurvivalNet.
+
+The SurvivalNet Docker Image can either be downloaded [here](https://hub.docker.com/r/cramraj8/survivalnet2.0/), or can be pulled from Docker hub using the following command:
     
     sudo docker pull cramraj8/survivalnet2.0
 
-
-Docker Image (***cramraj8/survivalnet2.0***) was built on top of Ubuntu-Docker Image. All the dependencies and libraries was added into the Docker Image. The *Bayesian Optimization* Python package was already installed inside the Docker Image. This ***Bayesian Optimization(BayesOpt package)*** can be located by */bayesopt/* folder.
-
-The survivalNet python package will be found inside the *Ubuntu-Docker* along with *BayesOpt* folder. 
-
-
-(Download and) Run the Docker Image (from Docker Hub) on local machine
+Running this image on your local machine with the command
     
     sudo docker run -it cramraj8/survivalnet2.0 /bin/bash
 
+launches a terminal within the image where users have access to the package installation. 
 
-This command will look for the **survivalnet2.0** Docker Image locally and if not found, then the Docker Engine will look at the Docker Hub.
-Once the Download is completed, a Docker Container will be created, and the terminal will turn into bash mode.
-
-
-
-Now you are inside the Docker Container.
-The project package is located inside the */SurvivalNet/* folder. 
-
-If you want to run the example python script, you can navigate into
+Example python scripts can be found in the folder 
     
     cd /SurvivalNet/examples/ 
-folder.
-There you can find some python scripts. But *Run.py* is the proper python script that can tell you about the deep learning progress.
+
+where users can see how to train and validate deep survival models. The main script
     
     python Run.py
-will execute the python-script run command, and you will see the network’s learning process step by step.
-
-
-
-The data - ***Brain_Integ.mat*** is located inside the */SurvivalNet/data/* folder.
-By default, this data will be considered into the network learning process.
-
-
-
-Once you done with exploration of SurvivalNet package, 
     
-    exit
-to exit the Docker Container.
+will perform Bayesian optimization to identify the optimal deep survival model configuation and will update the terminal with the step by step updates of the learning process.
+
+The sample data file - ***Brain_Integ.mat*** is located inside the */SurvivalNet/data/* folder. By default, ***Run.py*** uses this data for learning.
 
 
+### Using your own data to train networks
 
-Now you can check the Docker Image existence by,
-    
-    sudo docker images 
+You can train a network using your own data by mounting a folder within the SurvivalNet Docker image. The command
 
-
-### For using your data to train the network from your local machine
-
-For using the SurvivalNet Package with Docker, there is no need to write Dockerfile to pull the Docker Image.
-    
     sudo docker run -v /<hostmachine_data_path>/:/<container_data_path>/ -it cramraj8/survivalnet2.0 /bin/bash
-is enough to pull the Docker Image, run the container, and mount the host machine data directory with container data path.
-The container Data Path is usually be
-	***/SurvivalNet/data/<data_file_name>***
-  
+    
+will pull the Docker Image, run the container, and mount the host machine data directory with container data path.
+The container Data Path is ***/SurvivalNet/data/<data_file_name>***. 
   
