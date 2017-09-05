@@ -59,6 +59,5 @@ You can train a network using your own data by mounting a folder within the Surv
 
     sudo docker run -v /<hostmachine_data_path>/:/<container_data_path>/ -it cramraj8/survivalnet2.0 /bin/bash
     
-will pull the Docker Image, run the container, and mount the host machine data directory with container data path.
-The container Data Path is ***/SurvivalNet/data/<data_file_name>***. 
+will pull and run the Docker image, and mount *hostmachine_data_path* inside the container at *container_data_path*.  container data path. Any files placed into the mounted folder on the host machine will appear in *container_data_path* on the image. Setting *container_data_path* as */SurvivalNet/data/<data_file_name>* will place the image mount in the SurvivalNet data folder. 
   
