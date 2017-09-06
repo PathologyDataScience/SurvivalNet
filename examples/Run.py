@@ -110,17 +110,20 @@ def Run(input_path, output_path, do_bayes_opt, feature_key, epochs):
 		finetune_config = {'ft_lr':0.0001, 'ft_epochs':epochs}
 
 		print '*** Model Assesment ***'
-		_, train_cindices, _, test_cindices, _, _, _, _ = train(pretrain_set,
+		_, train_cindices, _, test_cindices, _, _, model, _ = train(pretrain_set,
 				train_set, test_set, pretrain_config, finetune_config, n_layers,
 				n_hidden, dropout_rate=do_rate, lambda1=lambda1, lambda2=lambda2, 
 				non_lin=nonlin, optim=opt, verbose=True, earlystp=False)
 		cindex_results.append(test_cindices[-1])
 		avg_cost += test_cindices[-1]
 		print expID , ' ',   test_cindices[-1],  'average = ',avg_cost/(i+1)
-	outputFileName = output_path  + 'cis.mat'
-	sio.savemat(outputFileName, {'cis':cindex_results})
-	print np.mean(cindex_results), np.std(cindex_results)
+		print np.mean(cindex_results), np.std(cindex_results)
+		with file(os.path.join(output_path, 'final_model'), 'wb') as f:
+			cPickle.dump(model, f, protocol=cPickle.HIGHEST_PROTOCOL)
 	
+	outputFileName = os.path.join(output_path, 'c_index_list.mat')
+	sio.savemat(outputFileName, {'c_index':cindex_results})
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog='Run',
