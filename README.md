@@ -6,7 +6,11 @@ SurvivalNet is a package for building survival analysis models using deep learni
 * Interpretation of trained networks using partial derivatives
 * Layer-wise unsupervised pre-training
 
-A short paper descibing our approach of using Cox partial likelihood was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf). A [longer paper](https://doi.org/10.1101/131367) was later published describing the package and showing applications in BioRxiv.
+A short paper [1] descibing our approach of using Cox partial likelihood was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf). A [longer paper](https://doi.org/10.1101/131367)[2] was later published describing the package and showing applications in BioRxiv.
+## References:
+[1] Yousefi, Safoora, et al. "Learning Genomic Representations to Predict Clinical Outcomes in Cancer." arXiv preprint arXiv:1609.08663 (2016).
+
+[2] Yousefi, Safoora, et al. "Predicting clinical outcomes from large scale cancer genomic profiles with deep survival models." bioRxiv (2017): 131367.
 
 # Getting Started
 The **examples** folder provides scripts to:
