@@ -16,15 +16,20 @@ The **examples** folder provides scripts to:
 * Define a cost function for use by Bayesian Optimization (CostFunction.py)
 * Interpret a trained model and analyze feature importance (ModelAnalysis.py)
 
-The Run.py training module takes as input a python dictionary containing the following numpy arrays:
+Run.py demonstrates how you can provide the input to the train.py module. To get started, you need the following three numpy arrays:
+
 * X: input data of size (number of patients, number of features). Patients must be sorted with respect to event or censoring times 'T'.
 * T: Time of event or time to last follow-up, appearing in increasing order and corresponding to the rows of 'X'. size: (number of patients, ).
 * O: Right-censoring status. A value of 1 means the event is observed (i.e. deceased or disease progression), a 0 value indicates that the sample is censored. size:(number of patients, ).
-* A: An index array encoding the at-risk set for each sample. For sample _i_, the _i_ th element in A is the index of the next sample in the at risk group of _i_ (see Run.py for an example of how to calculate this vector using the provided functions) size:(number of patients, ).
 
-These vectors are packed into a dictionty D and passed to train (found in train.py module) as demonstrated in Run.py.
+After splitting the data into train, validation and test sets, feed the corresponding arrays to 'SurvivalAnalysis.calc\_at\_risk' to get the data that can be used to train the network.
+```python
+train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train)
+test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test)
+```
+The resulting dictionaries 'train\_set' and 'test\_set' can be directly fed to train.py.
 
-The provided example scripts assume the data is a .mat file containinig, 'Survival', 'Censored', and either 'Integ\_X' or 'Gene\_X' depending on what feature set we are using.
+The provided example scripts read data provided in .mat format. You can, however, convert your data from any format to numpy arrays and follow the above procedure to prepare it for the SurvivalNet package.
 
 ## Installation Guide for Docker Image
 
