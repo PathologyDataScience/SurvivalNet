@@ -68,7 +68,7 @@ def _RiskBackpropagate(Model, Features):
 	"""
 
 	# define partial derivative
-	X = T.matrix('X')
+	X = T.matrix('X', dtype='float32')
 	AtRisk = T.ivector('AtRisk')
 	Observed = T.ivector('Observed')
 	Is_train = T.scalar('Is_train', dtype='int32')
