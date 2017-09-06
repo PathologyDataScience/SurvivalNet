@@ -1,102 +1,72 @@
 # SurvivalNet
-Survival net is an automated pipeline for survival analysis using deep learning. It is implemented in python using Theano to be compatible with current GPUs. It features the following functionalities:
+SurvivalNet is a package for building survival analysis models using deep learning. The SurvivalNet package has the following features:
 
-* Training deep fully connected networks with Cox partial likelihood for survival analysis.
-* Layer-wise unsupervised pre-training of the network
-* Automatic hyper-parameter tuning with Bayesian Optimization
-* Interpretation of the trained neural net based on partial derivatives
+* Training deep networks for time-to-event data using Cox partial likelihood
+* Automatic tuning of network architecture and learning hyper-parameters with Bayesian Optimization
+* Interpretation of trained networks using partial derivatives
+* Layer-wise unsupervised pre-training
 
-A short paper descibing this software and its performance compared to Cox+ElasticNet and Random Survival Forests was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf).
+A short paper [1] descibing our approach of using Cox partial likelihood was presented in ICLR 2016 and is available [here](https://arxiv.org/pdf/1609.08663.pdf). A [longer paper](https://doi.org/10.1101/131367)[2] was later published describing the package and showing applications in BioRxiv.
+## References:
+[1] Yousefi, Safoora, et al. "Learning Genomic Representations to Predict Clinical Outcomes in Cancer." arXiv preprint arXiv:1609.08663 (2016).
 
-In the **examples** folder you can find scripts to:
+[2] Yousefi, Safoora, et al. "Predicting clinical outcomes from large scale cancer genomic profiles with deep survival models." bioRxiv (2017): 131367.
+
+# Getting Started
+The **examples** folder provides scripts to:
 
 * Train a neural network on your dataset using Bayesian Optimization (Run.py)
 * Set parameters for Bayesian Optimizaiton (BayesianOptimization.py)
 * Define a cost function for use by Bayesian Optimization (CostFunction.py)
-* Interpret a trained model and analyse feature importance (ModelAnalysis.py)
+* Interpret a trained model and analyze feature importance (ModelAnalysis.py)
 
-The example scripts provided assume the data is a .mat file containinig, 'Survival', 'Censored', and either 'Integ\_X' or 'Gene\_X' depending on what feature set we are using. But the train module takes the following numpy arrays packed in a dictionary as input:
+Run.py demonstrates how you can provide the input to the train.py module. To get started, you need the following three numpy arrays:
 
-* X: input data of size (number of patients, number of features). Patients must be sorted with respect to T.
-* T: sorted survival labels; either time of event or time to last follow-up. size: (number of patients, ).
-* O: observed status. Array of 1s and 0s. 1 means event is observed, 0 means sample is censored. size:(number of patients, ). 
-Also sorted with respect to T.
-* A: for patient _i_, the corresponding element in A is the index of the first patient in the at risk group of _i_. Look at Run.py for an example of how to calculate this vector using the provided functions. size:(number of patients, ).
+* X: input data of size (number of patients, number of features). Patients must be sorted with respect to event or censoring times 'T'.
+* T: Time of event or time to last follow-up, appearing in increasing order and corresponding to the rows of 'X'. size: (number of patients, ).
+* O: Right-censoring status. A value of 1 means the event is observed (i.e. deceased or disease progression), a 0 value indicates that the sample is censored. size:(number of patients, ).
 
+After splitting the data into train, validation and test sets, feed the corresponding arrays to 'SurvivalAnalysis.calc\_at\_risk' to get the data that can be used to train the network.
+```python
+train_set['X'], train_set['T'], train_set['O'], train_set['A'] = sa.calc_at_risk(X_train, T_train, O_train)
+test_set['X'], test_set['T'], test_set['O'], test_set['A'] = sa.calc_at_risk(X_test, T_test, O_test)
+```
+The resulting dictionaries 'train\_set' and 'test\_set' can be directly fed to train.py.
 
-These vectors are packed into a dictionty D and passed to train (found in train.py module) as demonstrated in Run.py.
-
-
-
-
-
-
-
-
-
+The provided example scripts read data provided in .mat format. You can, however, convert your data from any format to numpy arrays and follow the above procedure to prepare it for the SurvivalNet package.
 
 ## Installation Guide for Docker Image
 
+A Docker image for SurvivalNet is provided for those who prefer not to build from source. This image contains an installation of SurvivalNet on a bare Ubuntu operating system along with sample data used in our *bioRxiv* paper. This helps users avoid installation of the */bayesopt/* package and other dependencies required by SurvivalNet.
 
-This project was build on Docker Platform for the easy use and the platform independency. The link for Docker Image is found [here](https://hub.docker.com/r/cancerdatascience/snet/).
-You can pull the Docker Image using this command on terminal.
+The SurvivalNet Docker Image can either be downloaded [here](https://hub.docker.com/r/cancerdatascience/snet/), or can be pulled from Docker hub using the following command:
     
     sudo docker pull cancerdatascience/snet:version1
 
-
-Docker Image (***cancerdatascience/snet:version1***) was built on top of Ubuntu-Docker Image. All the dependencies and libraries was added into the Docker Image. The *Bayesian Optimization* Python package was already installed inside the Docker Image. This ***Bayesian Optimization(BayesOpt package)*** can be located by */bayesopt/* folder.
-
-The survivalNet python package will be found inside the *Ubuntu-Docker* along with *BayesOpt* folder. 
-
-
-(Download and) Run the Docker Image (from Docker Hub) on local machine
+Running this image on your local machine with the command
     
     sudo docker run -it cancerdatascience/snet:version1 /bin/bash
 
+launches a terminal within the image where users have access to the package installation. 
 
-This command will look for the **snet:version1** Docker Image locally and if not found, then the Docker Engine will look at the Docker Hub.
-Once the Download is completed, a Docker Container will be created, and the terminal will turn into bash mode.
-
-
-
-Now you are inside the Docker Container.
-The project package is located inside the */SurvivalNet/* folder. 
-
-If you want to run the example python script, you can navigate into
+Example python scripts used in generating our results for the full-length paper can be found in the folder 
     
     cd /SurvivalNet/examples/ 
-folder.
-There you can find some python scripts. But *Run.py* is the proper python script that can tell you about the deep learning progress.
+
+These scripts provide examples of training and validating deep survival models. The main script
     
     python Run.py
-will execute the python-script run command, and you will see the network’s learning process step by step.
-
-
-
-The data - ***Brain_Integ.mat*** is located inside the */SurvivalNet/data/* folder.
-By default, this data will be considered into the network learning process.
-
-
-
-Once you done with exploration of SurvivalNet package, 
     
-    exit
-to exit the Docker Container.
+will perform Bayesian optimization to identify the optimal deep survival model configuation and will update the terminal with the step by step updates of the learning process.
+
+The sample data file - ***Brain_Integ.mat*** is located inside the */SurvivalNet/data/* folder. By default, ***Run.py*** uses this data for learning.
 
 
+### Using your own data to train networks
 
-Now you can check the Docker Image existence by,
-    
-    sudo docker images 
+You can train a network using your own data by mounting a folder within the SurvivalNet Docker image. The command
 
-
-### For using your data to train the network from your local machine
-
-For using the SurvivalNet Package with Docker, there is no need to write Dockerfile to pull the Docker Image.
-    
     sudo docker run -v /<hostmachine_data_path>/:/<container_data_path>/ -it cancerdatascience/snet:version1 /bin/bash
-is enough to pull the Docker Image, run the container, and mount the host machine data directory with container data path.
-The container Data Path is usually be
-	***/SurvivalNet/data/<data_file_name>***
-  
+    
+will pull and run the Docker image, and mount *hostmachine_data_path* inside the container at *container_data_path*.  container data path. Any files placed into the mounted folder on the host machine will appear in *container_data_path* on the image. Setting *container_data_path* as */SurvivalNet/data/<data_file_name>* will place the image mount in the SurvivalNet data folder.
   
