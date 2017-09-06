@@ -37,7 +37,7 @@ The provided example scripts read data provided in .mat format. You can, however
 
 ## Installation Guide for Docker Image
 
-A Docker image for SurvivalNet is provided for those who prefer not to build from source. This image contains an installation of SurvivalNet on a bare Ubuntu operating system along with sample data used in our paper published in *Scientific Reports*. This helps users avoid installation of the */bayesopt/* package and other dependencies required by SurvivalNet.
+A Docker image for SurvivalNet is provided for those who prefer not to build from source. This image contains an installation of SurvivalNet on a bare Ubuntu operating system along with sample data used in our *bioRxiv* paper. This helps users avoid installation of the */bayesopt/* package and other dependencies required by SurvivalNet.
 
 The SurvivalNet Docker Image can either be downloaded [here](https://hub.docker.com/r/cancerdatascience/snet/), or can be pulled from Docker hub using the following command:
     
@@ -49,11 +49,11 @@ Running this image on your local machine with the command
 
 launches a terminal within the image where users have access to the package installation. 
 
-Example python scripts can be found in the folder 
+Example python scripts used in generating our results for the full-length paper can be found in the folder 
     
     cd /SurvivalNet/examples/ 
 
-where users can see how to train and validate deep survival models. The main script
+These scripts provide examples of training and validating deep survival models. The main script
     
     python Run.py
     
@@ -68,5 +68,5 @@ You can train a network using your own data by mounting a folder within the Surv
 
     sudo docker run -v /<hostmachine_data_path>/:/<container_data_path>/ -it cancerdatascience/snet:version1 /bin/bash
     
-will pull and run the Docker image, and mount *hostmachine_data_path* inside the container at *container_data_path*.  container data path. Any files placed into the mounted folder on the host machine will appear in *container_data_path* on the image. Setting *container_data_path* as */SurvivalNet/data/<data_file_name>* will place the image mount in the SurvivalNet data folder. 
+will pull and run the Docker image, and mount *hostmachine_data_path* inside the container at *container_data_path*.  container data path. Any files placed into the mounted folder on the host machine will appear in *container_data_path* on the image. Setting *container_data_path* as */SurvivalNet/data/<data_file_name>* will place the image mount in the SurvivalNet data folder.
   
