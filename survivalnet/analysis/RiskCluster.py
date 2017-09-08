@@ -168,7 +168,8 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     cnv = Figure.add_axes([TRACK_X, TRACK_Y,
                            TRACK_W, TRACK_H - len(SigMut)*TRACK],
                           frame_on=False)
-    cnv.matshow(CNVs, aspect='auto', origin='lower', cmap=plt.cm.bwr)
+    cnv.matshow(CNVs, aspect='auto', origin='lower', cmap=plt.cm.bwr,
+                vmin=-2, vmax=2)
     for i in range(len(SigCNV)):
         cnv.text(-SPACING, i / np.float(len(SigCNV)) +
                  1/np.float(2*len(SigCNV)),

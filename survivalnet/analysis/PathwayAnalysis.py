@@ -1,7 +1,8 @@
 import numpy as np
 from .RiskCohort import RiskCohort
 from .SSGSEA import SSGSEA
-from .Visualization import _FixSymbols
+from .Visualization import _SplitSymbols
+from .Visualization import _WrapSymbols
 from .Visualization import RankedBar
 from .Visualization import RankedBox
 from .Visualization import PairScatter
@@ -53,7 +54,8 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
     """
 
     # wrap long gene set names and remove leading and trailing whitespace
-    CorrectedSetNames, Types = _FixSymbols(SetNames)
+    CorrectedSetNames, Types = _SplitSymbols(SetNames)
+    CorrectedSetNames = _WrapSymbols(CorrectedSetNames)
 
     # trim gene symbols names
     CorrectedSymbols = [Symbol[0:str.rfind(str(Symbol), '_')]

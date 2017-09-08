@@ -1,14 +1,18 @@
 import numpy as np
 from .RiskCohort import RiskCohort
 from .RiskCluster import RiskCluster
-from .Visualization import _FixSymbols
+from .Visualization import _SplitSymbols
+from .Visualization import _WrapSymbols
 from .Visualization import RankedBox
 from .Visualization import PairScatter
 from .Visualization import KMPlots
+from .WriteGCT import WriteGCT
+from .WriteRNK import WriteRNK
 
 
 def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
-                    NPlot=10, NCluster=100, Tau=0.05, Path=None):
+                    NBox=10, NScatter=10, NKM=10, NCluster=100, Tau=0.05,
+                    Path=None):
     """
     Generate visualizations of risk profiles. Backpropagation is used to
 
@@ -55,38 +59,43 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     """
 
     # wrap long symbols and remove leading and trailing whitespace
-    Corrected, Types = _FixSymbols(Symbols)
+    Corrected, Types = _SplitSymbols(Symbols)
+    Wrapped = _WrapSymbols(Corrected)
 
     # generate risk derivative profiles for cohort
     print "Generting risk gradient profiles..."
     Gradients = RiskCohort(Model, Normalized)
+    
+    # normalize risk derivative profiles
+    Gradients = Gradients / np.outer(np.linalg.norm(Gradients, axis=1),
+                                     np.ones((1, Gradients.shape[1])))
 
     # re-order symbols, raw features, gradients by mean gradient value, trim
     Means = np.asarray(np.mean(Gradients, axis=0))
     Order = np.argsort(-np.abs(Means))
-    cSymbols = [Corrected[i] for i in Order]
+    cSymbols = [Wrapped[i] for i in Order]
     cTypes = [Types[i] for i in Order]
     cRaw = Raw[:, Order]
     cGradients = Gradients[:, Order]
 
     # generate ranked box plot series
     print "Generating risk gradient boxplot..."
-    RBFig = RankedBox(cGradients[:, 0:NPlot],
-                      [cSymbols[i] for i in np.arange(NPlot)],
-                      [cTypes[i] for i in np.arange(NPlot)],
+    RBFig = RankedBox(cGradients[:, 0:NBox],
+                      [cSymbols[i] for i in np.arange(NBox)],
+                      [cTypes[i] for i in np.arange(NBox)],
                       XLabel='Model Features', YLabel='Risk Gradient')
 
     # generate paired scatter plot for gradients
     print "Generating paired scatter gradient plots..."
-    PSGradFig = PairScatter(cGradients[:, 0:NPlot],
-                            [cSymbols[i] for i in np.arange(NPlot)],
-                            [cTypes[i] for i in np.arange(NPlot)])
+    PSGradFig = PairScatter(cGradients[:, 0:NScatter],
+                            [cSymbols[i] for i in np.arange(NScatter)],
+                            [cTypes[i] for i in np.arange(NScatter)])
 
     # generate paired scatter plot for features
     print "Generating paired scatter feature plots..."
-    PSFeatFig = PairScatter(cRaw[:, 0:NPlot],
-                            [cSymbols[i] for i in np.arange(NPlot)],
-                            [cTypes[i] for i in np.arange(NPlot)])
+    PSFeatFig = PairScatter(cRaw[:, 0:NScatter],
+                            [cSymbols[i] for i in np.arange(NScatter)],
+                            [cTypes[i] for i in np.arange(NScatter)])
 
     # generate cluster plot
     print "Generating cluster analysis..."
@@ -97,13 +106,13 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
 
     # generate Kaplan-Meier plots for individual features
     print "Generating Kaplan-Meier plots..."
-    KMFigs = KMPlots(cGradients[:, 0:NPlot], cRaw[:, 0:NPlot],
-                     [cSymbols[i] for i in np.arange(NPlot)],
-                     [cTypes[i] for i in np.arange(NPlot)],
+    KMFigs = KMPlots(cGradients[:, 0:NKM], cRaw[:, 0:NKM],
+                     [cSymbols[i] for i in np.arange(NKM)],
+                     [cTypes[i] for i in np.arange(NKM)],
                      Survival, Censored)
 
     # save figures
-    print "Saving figures..."
+    print "Saving figures and outputs..."
     if Path is not None:
         # save standard figures
         RBFig.savefig(Path + 'RankedBox.pdf')
@@ -112,3 +121,7 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
         CFig.savefig(Path + 'Heatmap.pdf')
         for i, Figure in enumerate(KMFigs):
             Figure.savefig(Path + 'KM.' + Symbols[Order[i]].strip() + '.pdf')
+
+        # save tables
+        WriteRNK(Corrected, Means, Path + 'Gradients.rnk')
+        WriteGCT(Corrected, None, Gradients, Path + 'Gradients.gct')

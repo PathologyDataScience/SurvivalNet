@@ -283,284 +283,337 @@ def PairScatter(Gradients, Symbols, Types):
 
 
 def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
-	"""
-	Generates KM plots for individual features ranked by absolute magnitude.
+  
+    """
+    Generates KM plots for individual features ranked by absolute magnitude.
 
-	Parameters:
-	----------
+    Parameters:
+    ----------
 
-	Gradients : array_like
-	Numpy array containing feature/sample gradients obtained by RiskCohort.
-	Features are in columns and samples are in rows.
+    Gradients : array_like
+    Numpy array containing feature/sample gradients obtained by RiskCohort.
+    Features are in columns and samples are in rows.
 
-	Raw : array_like
-	Numpy array containing raw, unnormalized feature values. These are used to
-	examine associations between feature values and cluster assignments.
-	Features are in columns and samples are in rows.
+    Raw : array_like
+    Numpy array containing raw, unnormalized feature values. These are used to
+    examine associations between feature values and cluster assignments.
+    Features are in columns and samples are in rows.
 
-	Symbols : array_like
-	List containing strings describing features.
+    Symbols : array_like
+    List containing strings describing features.
 
-	Types: array_like
-	List containing strings describing feature types (e.g. CNV, Mut, Clinical).
-	See notes on allowed values of Types below.
+    Types: array_like
+    List containing strings describing feature types (e.g. CNV, Mut, Clinical).
+    See notes on allowed values of Types below.
 
-	Survival : array_like
-	Array containing death or last followup values.
+    Survival : array_like
+    Array containing death or last followup values.
 
-	Censored : array_like
-	Array containing vital status at last followup. 1 (alive) or 0 (deceased).
+    Censored : array_like
+    Array containing vital status at last followup. 1 (alive) or 0 (deceased).
 
-	Returns
-	-------
-	Figures : figure handle
-	List containing handles to figures.
+    Returns
+    -------
+    Figures : figure handle
+    List containing handles to figures.
 
-	Names : array_like
-	List of feature names for figures in 'Figures'
+    Names : array_like
+    List of feature names for figures in 'Figures'
 
-	Notes
-	-----
-	Types like 'Mut' and 'CNV' that are generated as suffixes to feature names
-	by the package tcgaintegrator are required analysis.
-	Note this uses feature values as opposed to back-propagated risk gradients.
-	Features are displayed in the order they are provided. Any sorting should
-	happen prior to calling.
-	"""
+    Notes
+    -----
+    Types like 'Mut' and 'CNV' that are generated as suffixes to feature names
+    by the package tcgaintegrator are required analysis.
+    Note this uses feature values as opposed to back-propagated risk gradients.
+    Features are displayed in the order they are provided. Any sorting should
+    happen prior to calling.
+    """
 
-	# initialize list of figures and names
-	Figures = []
+    # initialize list of figures and names
+    Figures = []
 
-	# generate Kaplan Meier fitter
-	kmf = KaplanMeierFitter()
+    # generate Kaplan Meier fitter
+    kmf = KaplanMeierFitter()
 
-	# generate KM plot for each feature
-	for count, i in enumerate(np.arange(Gradients.shape[1])):
+    # generate KM plot for each feature
+    for count, i in enumerate(np.arange(Gradients.shape[1])):
 
-		# generate figure and axes
-		Figures.append(plt.figure(figsize=(SURV_FW, SURV_FH),
-								  facecolor='white'))
-		Axes = Figures[count].add_axes([SURV_HSPACE, SURV_VSPACE,
-										1-2*SURV_HSPACE, 1-2*SURV_VSPACE])
-		# get unique values to determine if binary or continuous
-		Unique = np.unique(Raw[:, i])
+        # generate figure and axes
+        Figures.append(plt.figure(figsize=(SURV_FW, SURV_FH),
+                                  facecolor='white'))
+        Axes = Figures[count].add_axes([SURV_HSPACE, SURV_VSPACE,
+                                        1-2*SURV_HSPACE, 1-2*SURV_VSPACE])
 
-		if Types[i] == 'Clinical':
-			# process based on variable type
-			if Unique.size == 2:
+        # initialize log-rank test result
+        LogRank = None
 
-				# extract and plot mutant and wild-type survival profiles
-				kmf.fit(Survival[Raw[:, i] == Unique[0]],
-						1-Censored[Raw[:, i] == Unique[0]] == 1,
-						label=Symbols[i] + str(Unique[0]))
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] == Unique[1]],
-						1-Censored[Raw[:, i] == Unique[1]] == 1,
-						label=Symbols[i] + str(Unique[1]))
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] == Unique[0]],
-									   Survival[Raw[:, i] == Unique[1]],
-									   1-Censored[Raw[:, i] == Unique[0]] == 1,
-									   1-Censored[Raw[:, i] == Unique[1]] == 1)
-				plt.ylim(0, 1)
-				plt.title('Logrank p=' + str(LogRank.p_value))
-				lg = plt.gca().get_legend()
-				plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+        if Types[i] == 'Clinical':
 
-			else:
+            # get unique values to determine if binary or continuous
+            Unique = np.unique(Raw[:, i])
 
-				# determine median value
-				Median = np.median(Raw[:, i])
+            # process based on variable type
+            if Unique.size == 2:
 
-				# extract and altered and unaltered survival profiles
-				kmf.fit(Survival[Raw[:, i] > Median],
-						1-Censored[Raw[:, i] > Median] == 1,
-						label=Symbols[i] + " > " + str(Median))
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] <= Median],
-						1-Censored[Raw[:, i] <= Median] == 1,
-						label=Symbols[i] + " <= " + str(Median))
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] > Median],
-									   Survival[Raw[:, i] <= Median],
-									   1-Censored[Raw[:, i] > Median] == 1,
-									   1-Censored[Raw[:, i] <= Median] == 1)
-				plt.ylim(0, 1)
-				plt.title('Logrank p=' + str(LogRank.p_value))
-				lg = plt.gca().get_legend()
-				plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+                # extract and plot mutant and wild-type survival profiles
+                if np.sum(Raw[:, i] == Unique[0]):
+                    kmf.fit(Survival[Raw[:, i] == Unique[0]],
+                            1-Censored[Raw[:, i] == Unique[0]] == 1,
+                            label=Symbols[i] + str(Unique[0]))
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] == Unique[1]):
+                    kmf.fit(Survival[Raw[:, i] == Unique[1]],
+                            1-Censored[Raw[:, i] == Unique[1]] == 1,
+                            label=Symbols[i] + str(Unique[1]))
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] == Unique[0]) & \
+                   np.sum(Raw[:, i] == Unique[1]):
+                    LogRank = logrank_test(Survival[Raw[:, i] == Unique[0]],
+                                           Survival[Raw[:, i] == Unique[1]],
+                                           1-Censored[Raw[:, i] == Unique[0]]
+                                             == 1,
+                                           1-Censored[Raw[:, i] == Unique[1]]
+                                             == 1)
+                plt.ylim(0, 1)
+                if LogRank is not None:
+                    plt.title('Logrank p=' + str(LogRank.p_value))
+                lg = plt.gca().get_legend()
+                plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-		elif Types[i] == 'Mut':
+            else:
 
-			# extract and plot mutant and wild-type survival profiles
-			kmf.fit(Survival[Raw[:, i] == 1],
-					1-Censored[Raw[:, i] == 1] == 1,
-					label=Symbols[i] + " Mutant")
-			kmf.plot(ax=Axes, show_censors=True)
-			kmf.fit(Survival[Raw[:, i] == 0],
-					1-Censored[Raw[:, i] == 0] == 1,
-					label=Symbols[i] + " WT")
-			kmf.plot(ax=Axes, show_censors=True)
-			LogRank = logrank_test(Survival[Raw[:, i] == Unique[0]],
-								   Survival[Raw[:, i] == Unique[1]],
-								   1-Censored[Raw[:, i] == Unique[0]] == 1,
-								   1-Censored[Raw[:, i] == Unique[1]] == 1)
-			plt.ylim(0, 1)
-			lg = plt.gca().get_legend()
-			plt.title('Logrank p=' + str(LogRank.p_value))
-			plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+                # determine median value
+                Median = np.median(Raw[:, i])
 
-		elif Types[i] == 'CNV':
+                # extract and altered and unaltered survival profiles
+                if np.sum(Raw[:, i] > Median):
+                    kmf.fit(Survival[Raw[:, i] > Median],
+                            1-Censored[Raw[:, i] > Median] == 1,
+                            label=Symbols[i] + " > " + str(Median))
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] <= Median):
+                    kmf.fit(Survival[Raw[:, i] <= Median],
+                            1-Censored[Raw[:, i] <= Median] == 1,
+                            label=Symbols[i] + " <= " + str(Median))
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
+                    LogRank = logrank_test(Survival[Raw[:, i] > Median],
+                                           Survival[Raw[:, i] <= Median],
+                                           1-Censored[Raw[:, i] > Median]
+                                             == 1,
+                                           1-Censored[Raw[:, i] <= Median]
+                                             == 1)
+                plt.ylim(0, 1)
+                if LogRank is not None:
+                    plt.title('Logrank p=' + str(LogRank.p_value))
+                lg = plt.gca().get_legend()
+                plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-			# determine if alteration is amplification or deletion
-			Amplified = np.mean(Raw[:, i]) > 0
+        elif Types[i] == 'Mut':
 
-			# extract and plot altered and unaltered survival profiles
-			if Amplified:
-				kmf.fit(Survival[Raw[:, i] > 0],
-						1-Censored[Raw[:, i] > 0] == 1,
-						label=Symbols[i] + " " + Types[i] + " Amplified")
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] <= 0],
-						1-Censored[Raw[:, i] <= 0] == 1,
-						label=Symbols[i] + " " + Types[i] + " not Amplified")
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] > 0],
-						Survival[Raw[:, i] <= 0],
-						1-Censored[Raw[:, i] > 0] == 1,
-						1-Censored[Raw[:, i] <= 0] == 1)
-			else:
-				kmf.fit(Survival[Raw[:, i] < 0],
-						1-Censored[Raw[:, i] < 0] == 1,
-						label=Symbols[i] + " " + Types[i] + " Deleted")
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] >= 0],
-						1-Censored[Raw[:, i] >= 0] == 1,
-						label=Symbols[i] + " " + Types[i] + " not Deleted")
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] < 0],
-						Survival[Raw[:, i] >= 0],
-						1-Censored[Raw[:, i] < 0] == 1,
-						1-Censored[Raw[:, i] >= 0] == 1)
-				plt.ylim(0, 1)
-			plt.title('Logrank p=' + str(LogRank.p_value))
-			lg = plt.gca().get_legend()
-			plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+            # extract and plot mutant and wild-type survival profiles
+            if np.sum(Raw[:, i] == 1):
+                kmf.fit(Survival[Raw[:, i] == 1],
+                        1-Censored[Raw[:, i] == 1] == 1,
+                        label=Symbols[i] + " Mutant")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] == 0):
+                kmf.fit(Survival[Raw[:, i] == 0],
+                        1-Censored[Raw[:, i] == 0] == 1,
+                        label=Symbols[i] + " WT")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] == 1) & np.sum(Raw[:, i] == 0):
+                LogRank = logrank_test(Survival[Raw[:, i] == 0],
+                                       Survival[Raw[:, i] == 1],
+                                       1-Censored[Raw[:, i] == 0] == 1,
+                                       1-Censored[Raw[:, i] == 1] == 1)
+            plt.ylim(0, 1)
+            lg = plt.gca().get_legend()
+            if LogRank is not None:
+                plt.title('Logrank p=' + str(LogRank.p_value))
+            plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-		elif Types[i] == 'CNVArm':
+        elif Types[i] == 'CNV':
 
-			# determine if alteration is amplification or deletion
-			Amplified = np.mean(Raw[:, i]) > 0
+            # determine if alteration is amplification or deletion
+            Amplified = np.mean(Raw[:, i]) > 0
 
-			# extract and plot altered and unaltered survival profiles
-			if Amplified:
-				kmf.fit(Survival[Raw[:, i] > 0.25],
-						1-Censored[Raw[:, i] > 0.25] == 1,
-						label=Symbols[i] + " " + Types[i] + " Amplified")
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] <= 0.25],
-						1-Censored[Raw[:, i] <= 0.25] == 1,
-						label=Symbols[i] + " " + Types[i] + " not Amplified")
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] > 0.25],
-						Survival[Raw[:, i] <= 0.25],
-						1-Censored[Raw[:, i] > 0.25] == 1,
-						1-Censored[Raw[:, i] <= 0.25] == 1)
-			else:
-				kmf.fit(Survival[Raw[:, i] < -0.25],
-						1-Censored[Raw[:, i] < -0.25] == 1,
-						label=Symbols[i] + " " + Types[i] + " Deleted")
-				kmf.plot(ax=Axes, show_censors=True)
-				kmf.fit(Survival[Raw[:, i] >= -0.25],
-						1-Censored[Raw[:, i] >= -0.25] == 1,
-						label=Symbols[i] + " " + Types[i] + " not Deleted")
-				kmf.plot(ax=Axes, show_censors=True)
-				LogRank = logrank_test(Survival[Raw[:, i] < -0.25],
-						Survival[Raw[:, i] >= -0.25],
-						1-Censored[Raw[:, i] < -0.25] == 1,
-						1-Censored[Raw[:, i] >= -0.25] == 1)
-				plt.ylim(0, 1)
-			lg = plt.gca().get_legend()
-			plt.title('Logrank p=' + str(LogRank.p_value))
-			plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+            # extract and plot altered and unaltered survival profiles
+            if Amplified:
+                kmf.fit(Survival[Raw[:, i] > 0],
+                        1-Censored[Raw[:, i] > 0] == 1,
+                        label=Symbols[i] + " " + Types[i] + " Amplified")
+                kmf.plot(ax=Axes, show_censors=True)
+                if(np.sum(Raw[:, i] <= 0)):
+                    kmf.fit(Survival[Raw[:, i] <= 0],
+                            1-Censored[Raw[:, i] <= 0] == 1,
+                            label=Symbols[i] + " " + Types[i] +
+                            " not Amplified")
+                    kmf.plot(ax=Axes, show_censors=True)
+                    LogRank = logrank_test(Survival[Raw[:, i] > 0],
+                                           Survival[Raw[:, i] <= 0],
+                                           1-Censored[Raw[:, i] > 0] == 1,
+                                           1-Censored[Raw[:, i] <= 0] == 1)
+            else:
+                kmf.fit(Survival[Raw[:, i] < 0],
+                        1-Censored[Raw[:, i] < 0] == 1,
+                        label=Symbols[i] + " " + Types[i] + " Deleted")
+                kmf.plot(ax=Axes, show_censors=True)
+                if(np.sum(Raw[:, i] >= 0)):
+                    kmf.fit(Survival[Raw[:, i] >= 0],
+                            1-Censored[Raw[:, i] >= 0] == 1,
+                            label=Symbols[i] + " " + Types[i] + " not Deleted")
+                    kmf.plot(ax=Axes, show_censors=True)
+                    LogRank = logrank_test(Survival[Raw[:, i] < 0],
+                                           Survival[Raw[:, i] >= 0],
+                                           1-Censored[Raw[:, i] < 0] == 1,
+                                           1-Censored[Raw[:, i] >= 0] == 1)
+            if LogRank is not None:
+                plt.title('Logrank p=' + str(LogRank.p_value))
+            plt.ylim(0, 1)
+            lg = plt.gca().get_legend()
+            plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-		elif (Types[i] == 'Protein') or (Types[i] == 'mRNA'):
+        elif Types[i] == 'CNVArm':
 
-			# determine median expression
-			Median = np.median(Raw[:, i])
+            # determine if alteration is amplification or deletion
+            Amplified = np.mean(Raw[:, i]) > 0
 
-			# extract and altered and unaltered survival profiles
-			kmf.fit(Survival[Raw[:, i] > Median],
-					1-Censored[Raw[:, i] > Median] == 1,
-					label=Symbols[i] + " " + Types[i] + " Higher Expression")
-			kmf.plot(ax=Axes, show_censors=True)
-			kmf.fit(Survival[Raw[:, i] <= Median],
-					1-Censored[Raw[:, i] <= Median] == 1,
-					label=Symbols[i] + " " + Types[i] + " Lower Expression")
-			kmf.plot(ax=Axes, show_censors=True)
-			LogRank = logrank_test(Survival[Raw[:, i] > Median],
-					Survival[Raw[:, i] <= Median],
-					1-Censored[Raw[:, i] > Median] == 1,
-					1-Censored[Raw[:, i] <= Median] == 1)
-			plt.ylim(0, 1)
-			plt.title('Logrank p=' + str(LogRank.p_value))
-			lg = plt.gca().get_legend()
-			plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+            # extract and plot altered and unaltered survival profiles
+            if Amplified:
+                if(np.sum(Raw[:, i] > 0.25)):
+                    kmf.fit(Survival[Raw[:, i] > 0.25],
+                            1-Censored[Raw[:, i] > 0.25] == 1,
+                            label=Symbols[i] + " " + Types[i] + " Amplified")
+                    kmf.plot(ax=Axes, show_censors=True)
+                if(np.sum(Raw[:, i] <= 0.25)):
+                    kmf.fit(Survival[Raw[:, i] <= 0.25],
+                            1-Censored[Raw[:, i] <= 0.25] == 1,
+                            label=Symbols[i] + " " + Types[i] +
+                            " not Amplified")
+                    kmf.plot(ax=Axes, show_censors=True)
+                if(np.sum(Raw[:, i] > 0.25) & np.sum(Raw[:, i] <= 0.25)):
+                    LogRank = logrank_test(Survival[Raw[:, i] > 0.25],
+                                           Survival[Raw[:, i] <= 0.25],
+                                           1-Censored[Raw[:, i] > 0.25] == 1,
+                                           1-Censored[Raw[:, i] <= 0.25] == 1)
+            else:
+                if np.sum(Raw[:, i] < -0.25):
+                    kmf.fit(Survival[Raw[:, i] < -0.25],
+                            1-Censored[Raw[:, i] < -0.25] == 1,
+                            label=Symbols[i] + " " + Types[i] + " Deleted")
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] >= -0.25):
+                    kmf.fit(Survival[Raw[:, i] >= -0.25],
+                            1-Censored[Raw[:, i] >= -0.25] == 1,
+                            label=Symbols[i] + " " + Types[i] + " not Deleted")
+                    kmf.plot(ax=Axes, show_censors=True)
+                if np.sum(Raw[:, i] < -0.25) & np.sum(Raw[:, i] >= -0.25):
+                    LogRank = logrank_test(Survival[Raw[:, i] < -0.25],
+                                           Survival[Raw[:, i] >= -0.25],
+                                           1-Censored[Raw[:, i] < -0.25] == 1,
+                                           1-Censored[Raw[:, i] >= -0.25] == 1)
+            plt.ylim(0, 1)
+            lg = plt.gca().get_legend()
+            if LogRank is not None:
+                plt.title('Logrank p=' + str(LogRank.p_value))
+            plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-		elif (Types[i] == 'PATHWAY'):
+        elif (Types[i] == 'Protein') or (Types[i] == 'mRNA'):
 
-			# determine median expression
-			Median = np.median(Raw[:, i])
+            # determine median expression
+            Median = np.median(Raw[:, i])
 
-			# extract and altered and unaltered survival profiles
-			kmf.fit(Survival[Raw[:, i] > Median],
-					1-Censored[Raw[:, i] > Median] == 1,
-					label=Symbols[i] + " Higher Enrichment")
-			kmf.plot(ax=Axes, show_censors=True)
-			kmf.fit(Survival[Raw[:, i] <= Median],
-					1-Censored[Raw[:, i] <= Median] == 1,
-					label=Symbols[i] + " Lower Enrichment")
-			kmf.plot(ax=Axes, show_censors=True)
-			LogRank = logrank_test(Survival[Raw[:, i] > Median],
-					Survival[Raw[:, i] <= Median],
-					1-Censored[Raw[:, i] > Median] == 1,
-					1-Censored[Raw[:, i] <= Median] == 1)
-			plt.ylim(0, 1)
-			plt.title('Logrank p=' + str(LogRank.p_value))
-			lg = plt.gca().get_legend()
-			plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+            # extract and altered and unaltered survival profiles
+            if np.sum(Raw[:, i] > Median):
+                kmf.fit(Survival[Raw[:, i] > Median],
+                        1-Censored[Raw[:, i] > Median] == 1,
+                        label=Symbols[i] + " " + Types[i] +
+                        " Higher Expression")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] <= Median):
+                kmf.fit(Survival[Raw[:, i] <= Median],
+                        1-Censored[Raw[:, i] <= Median] == 1,
+                        label=Symbols[i] + " " + Types[i] +
+                        " Lower Expression")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
+                LogRank = logrank_test(Survival[Raw[:, i] > Median],
+                                       Survival[Raw[:, i] <= Median],
+                                       1-Censored[Raw[:, i] > Median] == 1,
+                                       1-Censored[Raw[:, i] <= Median] == 1)
+            plt.ylim(0, 1)
+            if LogRank is not None:
+                plt.title('Logrank p=' + str(LogRank.p_value))
+            lg = plt.gca().get_legend()
+            plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
-		else:
-			raise ValueError('Unrecognized feature type ' + '"' +
-					Types[i] + '"')
+        elif (Types[i] == 'PATHWAY'):
 
-		return Figures
+            # determine median expression
+            Median = np.median(Raw[:, i])
+
+            # extract and altered and unaltered survival profiles
+            if np.sum(Raw[:, i] > Median):
+                kmf.fit(Survival[Raw[:, i] > Median],
+                        1-Censored[Raw[:, i] > Median] == 1,
+                        label=Symbols[i] + " Higher Enrichment")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] <= Median):
+                kmf.fit(Survival[Raw[:, i] <= Median],
+                        1-Censored[Raw[:, i] <= Median] == 1,
+                        label=Symbols[i] + " Lower Enrichment")
+                kmf.plot(ax=Axes, show_censors=True)
+            if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
+                LogRank = logrank_test(Survival[Raw[:, i] > Median],
+                                       Survival[Raw[:, i] <= Median],
+                                       1-Censored[Raw[:, i] > Median] == 1,
+                                       1-Censored[Raw[:, i] <= Median] == 1)
+            plt.ylim(0, 1)
+            if LogRank is not None:
+                plt.title('Logrank p=' + str(LogRank.p_value))
+            lg = plt.gca().get_legend()
+            plt.setp(lg.get_texts(), fontsize=SURV_FONT)
+
+        else:
+            raise ValueError('Unrecognized feature type ' + '"' +
+                             Types[i] + '"')
+
+    return Figures
 
 
-def _FixSymbols(Symbols, Length=20):
-	"""
-	Removes trailing and leading whitespace and wraps long labels, separate
-	feature types from feature names, enumerate duplicate symbol names
-	"""
+def _SplitSymbols(Symbols):
+    """
+    Removes trailing and leading whitespace, separates feature types from
+    feature names, enumerates duplicate symbol names
+    """
 
-	# modify duplicate symbols where needed - append index to each instance
-	Prefix = [Symbol[0:str.rfind(str(Symbol), '_')] for Symbol in Symbols]
-	Types = [Symbol[str.rfind(str(Symbol), '_')+1:].strip()
-			 for Symbol in Symbols]
+    # modify duplicate symbols where needed - append index to each instance
+    Prefix = [Symbol[0:str.rfind(str(Symbol), '_')] for Symbol in Symbols]
+    Types = [Symbol[str.rfind(str(Symbol), '_')+1:].strip()
+             for Symbol in Symbols]
 
-	# copy prefixes
-	Corrected = Prefix[:]
+    # copy prefixes
+    Corrected = Prefix[:]
 
-	# append index to each duplicate instance
-	for i in np.arange(len(Prefix)):
-		if Prefix.count(Prefix[i]) > 1:
-			Corrected[i] = Prefix[i] + '.' + \
-					str(Prefix[0:i+1].count(Prefix[i]))
-		else:
-			Corrected[i] = Prefix[i]
+    # append index to each duplicate instance
+    for i in np.arange(len(Prefix)):
+        if Prefix.count(Prefix[i]) > 1:
+            Corrected[i] = Prefix[i] + '.' + \
+                str(Prefix[0:i+1].count(Prefix[i]))
+        else:
+            Corrected[i] = Prefix[i]
 
-	# remove whitespace and wrap
-	Corrected = ['\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
-			for Symbol in Corrected]
+    return Corrected, Types
 
-	return Corrected, Types
+
+def _WrapSymbols(Symbols, Length=20):
+    """
+    Wraps long labels
+    """
+
+    # remove whitespace and wrap
+    Corrected = ['\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
+                 for Symbol in Symbols]
+
+    return Corrected
