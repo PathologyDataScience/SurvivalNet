@@ -36,253 +36,254 @@ SURV_FONT = 8
 
 
 def RankedBar(Profile, Symbols, Types, XLabel=None, YLabel=None):
-    """
-    Generates a bar plot of feature gradients or enrichment scores ranked by
-    magnitude.
+	"""
+	Generates a bar plot of feature gradients or enrichment scores ranked by
+	magnitude.
 
-    Parameters:
-    ----------
-    Profile : array_like
-    Numpy array containing 1-dimensional feature/sample gradients or enrichment
-    scoresobtained.
+	Parameters:
+	----------
+	Profile : array_like
+	Numpy array containing 1-dimensional feature/sample gradients or enrichment
+	scoresobtained.
 
-    Symbols : array_like
-    List containing strings describing features in profile.
+	Symbols : array_like
+	List containing strings describing features in profile.
 
-    Types : array_like
-    List containing strings describing feature types (e.g. CNV, Mut, Clinical).
+	Types : array_like
+	List containing strings describing feature types (e.g. CNV, Mut, Clinical).
 
-    XLabel : string
-    Label for y axis. Default value = None
+	XLabel : string
+	Label for y axis. Default value = None
 
-    YLabel : string
-    Label for y axis. Default value = None
+	YLabel : string
+	Label for y axis. Default value = None
 
-    Returns:
-    --------
-    Figure : figure handle
-        Handle to figure used for saving image to disk i.e.
-        Figure.savefig('heatmap.pdf')
+	Returns:
+	--------
+	Figure : figure handle
+		Handle to figure used for saving image to disk i.e.
+		Figure.savefig('heatmap.pdf')
 
-    Notes:
-    ------
-    Features are displayed in the order they are provided. Any sorting should
-    happen prior to calling.
-    """
+	Notes:
+	------
+	Features are displayed in the order they are provided. Any sorting should
+	happen prior to calling.
+	"""
 
-    # generate figure and add axes
-    Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
-    Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
-                            1-BOX_HSPACE, 1-BOX_VSPACE],
-                           frame_on=False)
-    Axes.set_axis_bgcolor('white')
+	# generate figure and add axes
+	Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
+	Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
+							1-BOX_HSPACE, 1-BOX_VSPACE],
+						   frame_on=False)
+	Axes.set_axis_bgcolor('white')
 
-    # generate bars
-    Bars = Axes.bar(np.linspace(1, len(Profile), len(Profile)), Profile,
-                    align='center')
+	# generate bars
+	Bars = Axes.bar(np.linspace(1, len(Profile), len(Profile)), Profile,
+					align='center')
 
-    # modify box styling
-    for i, bar in enumerate(Bars):
-        if Profile[i] <= 0:
-            bar.set(color=BLUEEDGE, linewidth=2)
-            bar.set(facecolor=BLUEFACE)
-        else:
-            bar.set(color=REDEDGE, linewidth=2)
-            bar.set(facecolor=REDFACE)
+	# modify box styling
+	for i, bar in enumerate(Bars):
+		if Profile[i] <= 0:
+			bar.set(color=BLUEEDGE, linewidth=2)
+			bar.set(facecolor=BLUEFACE)
+		else:
+			bar.set(color=REDEDGE, linewidth=2)
+			bar.set(facecolor=REDFACE)
 
-    # set limits
-    Axes.set_ylim(1.05 * Profile.min(), 1.05 * Profile.max())
+	# set limits
+	Axes.set_ylim(1.05 * Profile.min(), 1.05 * Profile.max())
 
-    # format x axis
-    if XLabel is not None:
-        plt.xlabel(XLabel)
-    plt.xticks(np.linspace(1, len(Profile), len(Profile)),
-               [Symbols[i] + " _" + Types[i] for i in np.arange(len(Profile))],
-               rotation='vertical', fontsize=BOX_FONT)
-    Axes.set_xticks(np.linspace(1.5, len(Profile)-0.5,
-                                len(Profile)-1), minor=True)
-    Axes.xaxis.set_ticks_position('bottom')
+	# format x axis
+	if XLabel is not None:
+		plt.xlabel(XLabel)
+	plt.xticks(np.linspace(1, len(Profile), len(Profile)),
+			   [Symbols[i] + " _" + Types[i] for i in np.arange(len(Profile))],
+			   rotation='vertical', fontsize=BOX_FONT)
+	Axes.set_xticks(np.linspace(1.5, len(Profile)-0.5,
+								len(Profile)-1), minor=True)
+	Axes.xaxis.set_ticks_position('bottom')
 
-    # format y axis
-    if YLabel is not None:
-        plt.ylabel(YLabel)
-    Axes.yaxis.set_ticks_position('left')
+	# format y axis
+	if YLabel is not None:
+		plt.ylabel(YLabel)
+	Axes.yaxis.set_ticks_position('left')
 
-    # add grid lines and zero line
-    Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
-    plt.plot([0, len(Profile)+0.5], [0, 0], color='black')
+	# add grid lines and zero line
+	Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
+	plt.plot([0, len(Profile)+0.5], [0, 0], color='black')
 
-    return Figure
+	return Figure
 
 
 def RankedBox(Gradients, Symbols, Types, XLabel=None, YLabel=None):
-    """
-    Generates boxplot series of feature gradients ranked by absolute magnitude.
+	"""
+	Generates boxplot series of feature gradients ranked by absolute magnitude.
 
-    Parameters:
-    ----------
-    Gradients : array_like
-    Numpy array containing feature/sample gradients obtained by RiskCohort.
-    Features are in columns and samples are in rows.
+	Parameters:
+	----------
+	Gradients : array_like
+	Numpy array containing feature/sample gradients obtained by RiskCohort.
+	Features are in columns and samples are in rows.
 
-    Symbols : array_like
-    List containing strings describing features.
+	Symbols : array_like
+	List containing strings describing features.
 
-    Types: array_like
-    List containing strings describing feature types (e.g. CNV, Mut, Clinical).
+	Types: array_like
+	List containing strings describing feature types (e.g. CNV, Mut, Clinical).
 
-    XLabel : string
-    Label for y axis. Default value = None
+	XLabel : string
+	Label for y axis. Default value = None
 
-    YLabel : string
-    Label for y axis. Default value = None
+	YLabel : string
+	Label for y axis. Default value = None
 
-    Returns:
-    --------
-    Figure : figure handle
-        Handle to figure used for saving image to disk i.e.
-        Figure.savefig('heatmap.pdf')
+	Returns:
+	--------
+	Figure : figure handle
+		Handle to figure used for saving image to disk i.e.
+		Figure.savefig('heatmap.pdf')
 
-    Notes:
-    ------
-    Features are displayed in the order they are provided. Any sorting should
-    happen prior to calling.
-    """
+	Notes:
+	------
+	Features are displayed in the order they are provided. Any sorting should
+	happen prior to calling.
+	"""
 
-    # generate figure and add axes
-    Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
-    Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
-                            1-BOX_HSPACE, 1-BOX_VSPACE],
-                           frame_on=False)
-    Axes.set_axis_bgcolor('white')
+	# generate figure and add axes
+	Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
+	Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
+							1-BOX_HSPACE, 1-BOX_VSPACE],
+						   frame_on=False)
+	Axes.set_axis_bgcolor('white')
 
-    # generate boxplots
-    Box = Axes.boxplot(Gradients, patch_artist=True, showfliers=False)
+	# generate boxplots
+	Box = Axes.boxplot(Gradients, patch_artist=True, showfliers=False)
 
-    # set global properties
-    plt.setp(Box['medians'], color=MEDIAN, linewidth=1)
-    plt.setp(Box['whiskers'], color=WHISKER, linewidth=1, linestyle='-')
-    plt.setp(Box['caps'], color=WHISKER, linewidth=1)
+	# set global properties
+	plt.setp(Box['medians'], color=MEDIAN, linewidth=1)
+	plt.setp(Box['whiskers'], color=WHISKER, linewidth=1, linestyle='-')
+	plt.setp(Box['caps'], color=WHISKER, linewidth=1)
 
-    # modify box styling
-    for i, box in enumerate(Box['boxes']):
-        if np.mean(Gradients[:, i]) <= 0:
-            box.set(color=BLUEEDGE, linewidth=2)
-            box.set(facecolor=BLUEFACE)
-        else:
-            box.set(color=REDEDGE, linewidth=2)
-            box.set(facecolor=REDFACE)
+	# modify box styling
+	for i, box in enumerate(Box['boxes']):
+		if np.mean(Gradients[:, i]) <= 0:
+			box.set(color=BLUEEDGE, linewidth=2)
+			box.set(facecolor=BLUEFACE)
+		else:
+			box.set(color=REDEDGE, linewidth=2)
+			box.set(facecolor=REDFACE)
 
-    # add jittered data overlays
-    for i in np.arange(Gradients.shape[1]):
-        plt.scatter(np.random.normal(i+1, JITTER, size=Gradients.shape[0]),
-                    Gradients[:, i], color=POINTS, alpha=0.2,
-                    marker='o', s=2, zorder=100)
+	# add jittered data overlays
+	for i in np.arange(Gradients.shape[1]):
+		plt.scatter(np.random.normal(i+1, JITTER, size=Gradients.shape[0]),
+					Gradients[:, i], color=POINTS, alpha=0.2,
+					marker='o', s=2, zorder=100)
 
-    # set limits
-    Axes.set_ylim(1.05 * Gradients.min(), 1.05 * Gradients.max())
+	# set limits
+	Axes.set_ylim(1.05 * Gradients.min(), 1.05 * Gradients.max())
 
-    # format x axis
-    if XLabel is not None:
-        plt.xlabel(XLabel)
-    plt.xticks(np.linspace(1, Gradients.shape[1], Gradients.shape[1]),
-               [Symbols[i] + " _" + Types[i] for i in
-                np.arange(Gradients.shape[1])],
-               rotation='vertical', fontsize=BOX_FONT)
-    Axes.set_xticks(np.linspace(1.5, Gradients.shape[1]-0.5,
-                                Gradients.shape[1]-1), minor=True)
-    Axes.xaxis.set_ticks_position('bottom')
+	# format x axis
+	if XLabel is not None:
+		plt.xlabel(XLabel)
+	plt.xticks(np.linspace(1, Gradients.shape[1], Gradients.shape[1]),
+			   [Symbols[i] + " _" + Types[i] for i in
+				np.arange(Gradients.shape[1])],
+			   rotation='vertical', fontsize=BOX_FONT)
+	Axes.set_xticks(np.linspace(1.5, Gradients.shape[1]-0.5,
+								Gradients.shape[1]-1), minor=True)
+	Axes.xaxis.set_ticks_position('bottom')
 
-    # format y axis
-    if YLabel is not None:
-        plt.ylabel(YLabel)
-    Axes.yaxis.set_ticks_position('left')
+	# format y axis
+	if YLabel is not None:
+		plt.ylabel(YLabel)
+	Axes.yaxis.set_ticks_position('left')
 
-    # add grid lines and zero line
-    Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
-    plt.plot([0, Gradients.shape[1]+0.5], [0, 0], color='black')
+	# add grid lines and zero line
+	Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
+	plt.plot([0, Gradients.shape[1]+0.5], [0, 0], color='black')
 
-    return Figure
+	return Figure
 
 
 def PairScatter(Gradients, Symbols, Types):
-    """
-    Generates boxplot series of feature gradients ranked by absolute magnitude.
+	"""
+	Generates boxplot series of feature gradients ranked by absolute magnitude.
 
-    Parameters:
-    ----------
+	Parameters:
+	----------
 
-    Gradients : array_like
-    Numpy array containing feature/sample gradients obtained by RiskCohort.
-    Features are in columns and samples are in rows.
+	Gradients : array_like
+	Numpy array containing feature/sample gradients obtained by RiskCohort.
+	Features are in columns and samples are in rows.
 
-    Symbols : array_like
-    List containing strings describing features.
+	Symbols : array_like
+	List containing strings describing features.
 
-    Types: array_like
-    List containing strings describing feature types (e.g. CNV, Mut, Clinical).
+	Types: array_like
+	List containing strings describing feature types (e.g. CNV, Mut, Clinical).
 
-    Returns:
-    --------
-    Figure : figure handle
-        Handle to figure used for saving image to disk i.e.
-        Figure.savefig('heatmap.pdf')
+	Returns:
+	--------
+	Figure : figure handle
+		Handle to figure used for saving image to disk i.e.
+		Figure.savefig('heatmap.pdf')
 
-    Notes:
-    ------
-    Features are displayed in the order they are provided. Any sorting should
-    happen prior to calling.
-    """
+	Notes:
+	------
+	Features are displayed in the order they are provided. Any sorting should
+	happen prior to calling.
+	"""
 
-    # calculate means, standard deviations
-    Means = np.asarray(np.mean(Gradients, axis=0))
-    Std = np.asarray(np.std(Gradients, axis=0))
+	# calculate means, standard deviations
+	Means = np.asarray(np.mean(Gradients, axis=0))
+	Std = np.asarray(np.std(Gradients, axis=0))
 
-    # generate subplots
-    Figure, Axes = plt.subplots(nrows=Gradients.shape[1],
-                                ncols=Gradients.shape[1],
-                                figsize=(PAIR_FW, PAIR_FW),
-                                facecolor='white')
-    Figure.subplots_adjust(hspace=PAIR_SPACING, wspace=PAIR_SPACING,
-                           bottom=PAIR_SPACING)
+	# generate subplots
+	Figure, Axes = plt.subplots(nrows=Gradients.shape[1],
+								ncols=Gradients.shape[1],
+								figsize=(PAIR_FW, PAIR_FW),
+								facecolor='white')
+	Figure.subplots_adjust(hspace=PAIR_SPACING, wspace=PAIR_SPACING,
+						   bottom=PAIR_SPACING)
 
-    # remove axes and ticks
-    for ax in Axes.flat:
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
+	# remove axes and ticks
+	for ax in Axes.flat:
+		ax.xaxis.set_visible(False)
+		ax.yaxis.set_visible(False)
 
-    # generate scatter plots in lower triangular portion
-    for i, j in zip(*np.triu_indices_from(Axes, k=1)):
-        Axes[i, j].scatter((Gradients[:, j]-Means[j]) / Std[j],
-                           (Gradients[:, i]-Means[i]) / Std[i],
-                           color=POINTS, alpha=0.2, marker='o', s=2)
-        Smooth = lowess((Gradients[:, j]-Means[j]) / Std[j],
-                        (Gradients[:, i]-Means[i]) / Std[i])
-        Axes[i, j].plot(Smooth[:, 1], Smooth[:, 0], color='red')
+	# generate scatter plots in lower triangular portion
+	for i, j in zip(*np.triu_indices_from(Axes, k=1)):
+		Axes[i, j].scatter((Gradients[:, j]-Means[j]) / Std[j],
+						   (Gradients[:, i]-Means[i]) / Std[i],
+						   color=POINTS, alpha=0.2, marker='o', s=2)
+		Smooth = lowess((Gradients[:, j]-Means[j]) / Std[j],
+						(Gradients[:, i]-Means[i]) / Std[i])
+		Axes[i, j].plot(Smooth[:, 1], Smooth[:, 0], color='red')
 
-    # generate histograms on diagonal
-    for i in np.arange(Gradients.shape[1]):
-        if Means[i] <= 0:
-            Axes[i, i].hist(Gradients[:, i],
-                            facecolor=BLUEFACE,
-                            alpha=0.8)
-        else:
-            Axes[i, i].hist(Gradients[:, i],
-                            facecolor=REDFACE,
-                            alpha=0.8)
-        Axes[i, i].annotate(Symbols[i] + " _" + Types[i], (0, 0),
-                            xycoords='axes fraction',
-                            ha='right', va='top',
-                            rotation=45)
+	# generate histograms on diagonal
+	for i in np.arange(Gradients.shape[1]):
+		if Means[i] <= 0:
+			Axes[i, i].hist(Gradients[:, i],
+							facecolor=BLUEFACE,
+							alpha=0.8)
+		else:
+			Axes[i, i].hist(Gradients[:, i],
+							facecolor=REDFACE,
+							alpha=0.8)
+		Axes[i, i].annotate(Symbols[i] + " _" + Types[i], (0, 0),
+							xycoords='axes fraction',
+							ha='right', va='top',
+							rotation=45)
 
-    # delete unused axes
-    for i, j in zip(*np.tril_indices_from(Axes, k=-1)):
-        Figure.delaxes(Axes[i, j])
+	# delete unused axes
+	for i, j in zip(*np.tril_indices_from(Axes, k=-1)):
+		Figure.delaxes(Axes[i, j])
 
-    return Figure
+	return Figure
 
 
 def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
+  
     """
     Generates KM plots for individual features ranked by absolute magnitude.
 

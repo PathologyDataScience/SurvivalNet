@@ -114,7 +114,6 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     # save figures
     print "Saving figures and outputs..."
     if Path is not None:
-
         # save standard figures
         RBFig.savefig(Path + 'RankedBox.pdf')
         PSGradFig.savefig(Path + 'PairedScatter.Gradient.pdf')
