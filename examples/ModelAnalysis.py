@@ -29,6 +29,4 @@ for i, Path in enumerate(ModelPaths):
 
 	sn.analysis.FeatureAnalysis(Model, Normalized, Raw, Symbols,
 								Survival, Censored,
-								NPlot=11, 
-								NCluster=Raw.shape[1],
 								Tau=5e-2, Path=Path)
