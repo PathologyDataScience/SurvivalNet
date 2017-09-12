@@ -24,7 +24,6 @@ __all__ = (
     'ReadGMT',
     'RiskCluster',
     'RiskCohort',
-    'SSGSEA',
     'WriteGCT',
     'WriteRNK',
 )
