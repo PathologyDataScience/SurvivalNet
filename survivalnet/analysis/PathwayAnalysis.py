@@ -1,6 +1,5 @@
 import numpy as np
 from .RiskCohort import RiskCohort
-from .SSGSEA import SSGSEA
 from .Visualization import _SplitSymbols
 from .Visualization import _WrapSymbols
 from .Visualization import RankedBar
