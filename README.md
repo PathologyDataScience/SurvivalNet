@@ -10,7 +10,7 @@ A [short paper [1]](https://arxiv.org/abs/1609.08663) descibing our approach of 
 ## References:
 [[1] Yousefi, Safoora, et al. "Learning Genomic Representations to Predict Clinical Outcomes in Cancer." arXiv preprint arXiv:1609.08663, May 2016.](https://arxiv.org/abs/1609.08663)
 
-[[2] Yousefi, Safoora, et al. "Predicting clinical outcomes from large scale cancer genomic profiles with deep survival models." bioRxiv, April 2017: 131367.](https://doi.org/10.1101/131367)
+[[2] Yousefi, Safoora, et al. "Predicting clinical outcomes from large scale cancer genomic profiles with deep survival models." Nature Scientific Reports 7, Article number: 11707 (2017) doi:10.1038/s41598-017-11817-6](https://www.nature.com/articles/s41598-017-11817-6)
 
 # Getting Started
 The **examples** folder provides scripts to:
