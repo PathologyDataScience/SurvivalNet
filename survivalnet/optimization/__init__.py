@@ -11,7 +11,6 @@ __all__ = (
 	'BFGS',
 	'isOverfitting',
 	'GLDS',
-	'LineSearch',
 	'Optimization',
 	'SurvivalAnalysis',
 )
