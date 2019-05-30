@@ -1,9 +1,11 @@
-from lifelines import KaplanMeierFitter
-from lifelines.statistics import logrank_test
+from textwrap import wrap
+
 import matplotlib.pyplot as plt
 import numpy as np
 from statsmodels.nonparametric.smoothers_lowess import lowess
-from textwrap import wrap
+
+from lifelines import KaplanMeierFitter
+from lifelines.statistics import logrank_test
 
 # define colors for positive risk (red) and negative risk (blue)
 REDFACE = '#DE2D26'
@@ -36,7 +38,7 @@ SURV_FONT = 8
 
 
 def RankedBar(Profile, Symbols, Types, XLabel=None, YLabel=None):
-	"""
+    """
 	Generates a bar plot of feature gradients or enrichment scores ranked by
 	magnitude.
 
@@ -70,53 +72,57 @@ def RankedBar(Profile, Symbols, Types, XLabel=None, YLabel=None):
 	happen prior to calling.
 	"""
 
-	# generate figure and add axes
-	Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
-	Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
-							1-BOX_HSPACE, 1-BOX_VSPACE],
-						   frame_on=False)
-	Axes.set_axis_bgcolor('white')
+    # generate figure and add axes
+    Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
+    Axes = Figure.add_axes(
+        [BOX_HSPACE, BOX_VSPACE, 1 - BOX_HSPACE, 1 - BOX_VSPACE],
+        frame_on=False)
+    Axes.set_facecolor('white')
 
-	# generate bars
-	Bars = Axes.bar(np.linspace(1, len(Profile), len(Profile)), Profile,
-					align='center')
+    # generate bars
+    Bars = Axes.bar(np.linspace(1, len(Profile), len(Profile)),
+                    Profile,
+                    align='center')
 
-	# modify box styling
-	for i, bar in enumerate(Bars):
-		if Profile[i] <= 0:
-			bar.set(color=BLUEEDGE, linewidth=2)
-			bar.set(facecolor=BLUEFACE)
-		else:
-			bar.set(color=REDEDGE, linewidth=2)
-			bar.set(facecolor=REDFACE)
+    # modify box styling
+    for i, bar in enumerate(Bars):
+        if Profile[i] <= 0:
+            bar.set(color=BLUEEDGE, linewidth=2)
+            bar.set(facecolor=BLUEFACE)
+        else:
+            bar.set(color=REDEDGE, linewidth=2)
+            bar.set(facecolor=REDFACE)
 
-	# set limits
-	Axes.set_ylim(1.05 * Profile.min(), 1.05 * Profile.max())
+    # set limits
+    Axes.set_ylim(1.05 * Profile.min(), 1.05 * Profile.max())
 
-	# format x axis
-	if XLabel is not None:
-		plt.xlabel(XLabel)
-	plt.xticks(np.linspace(1, len(Profile), len(Profile)),
-			   [Symbols[i] + " _" + Types[i] for i in np.arange(len(Profile))],
-			   rotation='vertical', fontsize=BOX_FONT)
-	Axes.set_xticks(np.linspace(1.5, len(Profile)-0.5,
-								len(Profile)-1), minor=True)
-	Axes.xaxis.set_ticks_position('bottom')
+    # format x axis
+    if XLabel is not None:
+        plt.xlabel(XLabel)
+    plt.xticks(np.linspace(1, len(Profile), len(Profile)),
+               [Symbols[i] + " _" + Types[i] for i in np.arange(len(Profile))],
+               rotation='vertical',
+               fontsize=BOX_FONT)
+    Axes.set_xticks(np.linspace(1.5,
+                                len(Profile) - 0.5,
+                                len(Profile) - 1),
+                    minor=True)
+    Axes.xaxis.set_ticks_position('bottom')
 
-	# format y axis
-	if YLabel is not None:
-		plt.ylabel(YLabel)
-	Axes.yaxis.set_ticks_position('left')
+    # format y axis
+    if YLabel is not None:
+        plt.ylabel(YLabel)
+    Axes.yaxis.set_ticks_position('left')
 
-	# add grid lines and zero line
-	Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
-	plt.plot([0, len(Profile)+0.5], [0, 0], color='black')
+    # add grid lines and zero line
+    Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
+    plt.plot([0, len(Profile) + 0.5], [0, 0], color='black')
 
-	return Figure
+    return Figure
 
 
 def RankedBox(Gradients, Symbols, Types, XLabel=None, YLabel=None):
-	"""
+    """
 	Generates boxplot series of feature gradients ranked by absolute magnitude.
 
 	Parameters:
@@ -149,64 +155,70 @@ def RankedBox(Gradients, Symbols, Types, XLabel=None, YLabel=None):
 	happen prior to calling.
 	"""
 
-	# generate figure and add axes
-	Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
-	Axes = Figure.add_axes([BOX_HSPACE, BOX_VSPACE,
-							1-BOX_HSPACE, 1-BOX_VSPACE],
-						   frame_on=False)
-	Axes.set_axis_bgcolor('white')
+    # generate figure and add axes
+    Figure = plt.figure(figsize=(BOX_FW, BOX_FH), facecolor='white')
+    Axes = Figure.add_axes(
+        [BOX_HSPACE, BOX_VSPACE, 1 - BOX_HSPACE, 1 - BOX_VSPACE],
+        frame_on=False)
+    Axes.set_facecolor('white')
 
-	# generate boxplots
-	Box = Axes.boxplot(Gradients, patch_artist=True, showfliers=False)
+    # generate boxplots
+    Box = Axes.boxplot(Gradients, patch_artist=True, showfliers=False)
 
-	# set global properties
-	plt.setp(Box['medians'], color=MEDIAN, linewidth=1)
-	plt.setp(Box['whiskers'], color=WHISKER, linewidth=1, linestyle='-')
-	plt.setp(Box['caps'], color=WHISKER, linewidth=1)
+    # set global properties
+    plt.setp(Box['medians'], color=MEDIAN, linewidth=1)
+    plt.setp(Box['whiskers'], color=WHISKER, linewidth=1, linestyle='-')
+    plt.setp(Box['caps'], color=WHISKER, linewidth=1)
 
-	# modify box styling
-	for i, box in enumerate(Box['boxes']):
-		if np.mean(Gradients[:, i]) <= 0:
-			box.set(color=BLUEEDGE, linewidth=2)
-			box.set(facecolor=BLUEFACE)
-		else:
-			box.set(color=REDEDGE, linewidth=2)
-			box.set(facecolor=REDFACE)
+    # modify box styling
+    for i, box in enumerate(Box['boxes']):
+        if np.mean(Gradients[:, i]) <= 0:
+            box.set(color=BLUEEDGE, linewidth=2)
+            box.set(facecolor=BLUEFACE)
+        else:
+            box.set(color=REDEDGE, linewidth=2)
+            box.set(facecolor=REDFACE)
 
-	# add jittered data overlays
-	for i in np.arange(Gradients.shape[1]):
-		plt.scatter(np.random.normal(i+1, JITTER, size=Gradients.shape[0]),
-					Gradients[:, i], color=POINTS, alpha=0.2,
-					marker='o', s=2, zorder=100)
+    # add jittered data overlays
+    for i in np.arange(Gradients.shape[1]):
+        plt.scatter(np.random.normal(i + 1, JITTER, size=Gradients.shape[0]),
+                    Gradients[:, i],
+                    color=POINTS,
+                    alpha=0.2,
+                    marker='o',
+                    s=2,
+                    zorder=100)
 
-	# set limits
-	Axes.set_ylim(1.05 * Gradients.min(), 1.05 * Gradients.max())
+    # set limits
+    Axes.set_ylim(1.05 * Gradients.min(), 1.05 * Gradients.max())
 
-	# format x axis
-	if XLabel is not None:
-		plt.xlabel(XLabel)
-	plt.xticks(np.linspace(1, Gradients.shape[1], Gradients.shape[1]),
-			   [Symbols[i] + " _" + Types[i] for i in
-				np.arange(Gradients.shape[1])],
-			   rotation='vertical', fontsize=BOX_FONT)
-	Axes.set_xticks(np.linspace(1.5, Gradients.shape[1]-0.5,
-								Gradients.shape[1]-1), minor=True)
-	Axes.xaxis.set_ticks_position('bottom')
+    # format x axis
+    if XLabel is not None:
+        plt.xlabel(XLabel)
+    plt.xticks(
+        np.linspace(1, Gradients.shape[1], Gradients.shape[1]),
+        [Symbols[i] + " _" + Types[i] for i in np.arange(Gradients.shape[1])],
+        rotation='vertical',
+        fontsize=BOX_FONT)
+    Axes.set_xticks(np.linspace(1.5, Gradients.shape[1] - 0.5,
+                                Gradients.shape[1] - 1),
+                    minor=True)
+    Axes.xaxis.set_ticks_position('bottom')
 
-	# format y axis
-	if YLabel is not None:
-		plt.ylabel(YLabel)
-	Axes.yaxis.set_ticks_position('left')
+    # format y axis
+    if YLabel is not None:
+        plt.ylabel(YLabel)
+    Axes.yaxis.set_ticks_position('left')
 
-	# add grid lines and zero line
-	Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
-	plt.plot([0, Gradients.shape[1]+0.5], [0, 0], color='black')
+    # add grid lines and zero line
+    Axes.xaxis.grid(True, color=GRID, linestyle='-', which='minor')
+    plt.plot([0, Gradients.shape[1] + 0.5], [0, 0], color='black')
 
-	return Figure
+    return Figure
 
 
 def PairScatter(Gradients, Symbols, Types):
-	"""
+    """
 	Generates boxplot series of feature gradients ranked by absolute magnitude.
 
 	Parameters:
@@ -234,56 +246,56 @@ def PairScatter(Gradients, Symbols, Types):
 	happen prior to calling.
 	"""
 
-	# calculate means, standard deviations
-	Means = np.asarray(np.mean(Gradients, axis=0))
-	Std = np.asarray(np.std(Gradients, axis=0))
+    # calculate means, standard deviations
+    Means = np.asarray(np.mean(Gradients, axis=0))
+    Std = np.asarray(np.std(Gradients, axis=0))
 
-	# generate subplots
-	Figure, Axes = plt.subplots(nrows=Gradients.shape[1],
-								ncols=Gradients.shape[1],
-								figsize=(PAIR_FW, PAIR_FW),
-								facecolor='white')
-	Figure.subplots_adjust(hspace=PAIR_SPACING, wspace=PAIR_SPACING,
-						   bottom=PAIR_SPACING)
+    # generate subplots
+    Figure, Axes = plt.subplots(nrows=Gradients.shape[1],
+                                ncols=Gradients.shape[1],
+                                figsize=(PAIR_FW, PAIR_FW),
+                                facecolor='white')
+    Figure.subplots_adjust(hspace=PAIR_SPACING,
+                           wspace=PAIR_SPACING,
+                           bottom=PAIR_SPACING)
 
-	# remove axes and ticks
-	for ax in Axes.flat:
-		ax.xaxis.set_visible(False)
-		ax.yaxis.set_visible(False)
+    # remove axes and ticks
+    for ax in Axes.flat:
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
 
-	# generate scatter plots in lower triangular portion
-	for i, j in zip(*np.triu_indices_from(Axes, k=1)):
-		Axes[i, j].scatter((Gradients[:, j]-Means[j]) / Std[j],
-						   (Gradients[:, i]-Means[i]) / Std[i],
-						   color=POINTS, alpha=0.2, marker='o', s=2)
-		Smooth = lowess((Gradients[:, j]-Means[j]) / Std[j],
-						(Gradients[:, i]-Means[i]) / Std[i])
-		Axes[i, j].plot(Smooth[:, 1], Smooth[:, 0], color='red')
+    # generate scatter plots in lower triangular portion
+    for i, j in zip(*np.triu_indices_from(Axes, k=1)):
+        Axes[i, j].scatter((Gradients[:, j] - Means[j]) / Std[j],
+                           (Gradients[:, i] - Means[i]) / Std[i],
+                           color=POINTS,
+                           alpha=0.2,
+                           marker='o',
+                           s=2)
+        Smooth = lowess((Gradients[:, j] - Means[j]) / Std[j],
+                        (Gradients[:, i] - Means[i]) / Std[i])
+        Axes[i, j].plot(Smooth[:, 1], Smooth[:, 0], color='red')
 
-	# generate histograms on diagonal
-	for i in np.arange(Gradients.shape[1]):
-		if Means[i] <= 0:
-			Axes[i, i].hist(Gradients[:, i],
-							facecolor=BLUEFACE,
-							alpha=0.8)
-		else:
-			Axes[i, i].hist(Gradients[:, i],
-							facecolor=REDFACE,
-							alpha=0.8)
-		Axes[i, i].annotate(Symbols[i] + " _" + Types[i], (0, 0),
-							xycoords='axes fraction',
-							ha='right', va='top',
-							rotation=45)
+    # generate histograms on diagonal
+    for i in np.arange(Gradients.shape[1]):
+        if Means[i] <= 0:
+            Axes[i, i].hist(Gradients[:, i], facecolor=BLUEFACE, alpha=0.8)
+        else:
+            Axes[i, i].hist(Gradients[:, i], facecolor=REDFACE, alpha=0.8)
+        Axes[i, i].annotate(Symbols[i] + " _" + Types[i], (0, 0),
+                            xycoords='axes fraction',
+                            ha='right',
+                            va='top',
+                            rotation=45)
 
-	# delete unused axes
-	for i, j in zip(*np.tril_indices_from(Axes, k=-1)):
-		Figure.delaxes(Axes[i, j])
+    # delete unused axes
+    for i, j in zip(*np.tril_indices_from(Axes, k=-1)):
+        Figure.delaxes(Axes[i, j])
 
-	return Figure
+    return Figure
 
 
 def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
-  
     """
     Generates KM plots for individual features ranked by absolute magnitude.
 
@@ -339,10 +351,11 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
     for count, i in enumerate(np.arange(Gradients.shape[1])):
 
         # generate figure and axes
-        Figures.append(plt.figure(figsize=(SURV_FW, SURV_FH),
-                                  facecolor='white'))
-        Axes = Figures[count].add_axes([SURV_HSPACE, SURV_VSPACE,
-                                        1-2*SURV_HSPACE, 1-2*SURV_VSPACE])
+        Figures.append(
+            plt.figure(figsize=(SURV_FW, SURV_FH), facecolor='white'))
+        Axes = Figures[count].add_axes([
+            SURV_HSPACE, SURV_VSPACE, 1 - 2 * SURV_HSPACE, 1 - 2 * SURV_VSPACE
+        ])
 
         # initialize log-rank test result
         LogRank = None
@@ -358,22 +371,21 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
                 # extract and plot mutant and wild-type survival profiles
                 if np.sum(Raw[:, i] == Unique[0]):
                     kmf.fit(Survival[Raw[:, i] == Unique[0]],
-                            1-Censored[Raw[:, i] == Unique[0]] == 1,
+                            1 - Censored[Raw[:, i] == Unique[0]] == 1,
                             label=Symbols[i] + str(Unique[0]))
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] == Unique[1]):
                     kmf.fit(Survival[Raw[:, i] == Unique[1]],
-                            1-Censored[Raw[:, i] == Unique[1]] == 1,
+                            1 - Censored[Raw[:, i] == Unique[1]] == 1,
                             label=Symbols[i] + str(Unique[1]))
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] == Unique[0]) & \
                    np.sum(Raw[:, i] == Unique[1]):
-                    LogRank = logrank_test(Survival[Raw[:, i] == Unique[0]],
-                                           Survival[Raw[:, i] == Unique[1]],
-                                           1-Censored[Raw[:, i] == Unique[0]]
-                                             == 1,
-                                           1-Censored[Raw[:, i] == Unique[1]]
-                                             == 1)
+                    LogRank = logrank_test(
+                        Survival[Raw[:, i] == Unique[0]],
+                        Survival[Raw[:, i] == Unique[1]],
+                        1 - Censored[Raw[:, i] == Unique[0]] == 1,
+                        1 - Censored[Raw[:, i] == Unique[1]] == 1)
                 plt.ylim(0, 1)
                 if LogRank is not None:
                     plt.title('Logrank p=' + str(LogRank.p_value))
@@ -388,21 +400,20 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
                 # extract and altered and unaltered survival profiles
                 if np.sum(Raw[:, i] > Median):
                     kmf.fit(Survival[Raw[:, i] > Median],
-                            1-Censored[Raw[:, i] > Median] == 1,
+                            1 - Censored[Raw[:, i] > Median] == 1,
                             label=Symbols[i] + " > " + str(Median))
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] <= Median):
                     kmf.fit(Survival[Raw[:, i] <= Median],
-                            1-Censored[Raw[:, i] <= Median] == 1,
+                            1 - Censored[Raw[:, i] <= Median] == 1,
                             label=Symbols[i] + " <= " + str(Median))
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
-                    LogRank = logrank_test(Survival[Raw[:, i] > Median],
-                                           Survival[Raw[:, i] <= Median],
-                                           1-Censored[Raw[:, i] > Median]
-                                             == 1,
-                                           1-Censored[Raw[:, i] <= Median]
-                                             == 1)
+                    LogRank = logrank_test(
+                        Survival[Raw[:, i] > Median],
+                        Survival[Raw[:, i] <= Median],
+                        1 - Censored[Raw[:, i] > Median] == 1,
+                        1 - Censored[Raw[:, i] <= Median] == 1)
                 plt.ylim(0, 1)
                 if LogRank is not None:
                     plt.title('Logrank p=' + str(LogRank.p_value))
@@ -414,19 +425,19 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
             # extract and plot mutant and wild-type survival profiles
             if np.sum(Raw[:, i] == 1):
                 kmf.fit(Survival[Raw[:, i] == 1],
-                        1-Censored[Raw[:, i] == 1] == 1,
+                        1 - Censored[Raw[:, i] == 1] == 1,
                         label=Symbols[i] + " Mutant")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] == 0):
                 kmf.fit(Survival[Raw[:, i] == 0],
-                        1-Censored[Raw[:, i] == 0] == 1,
+                        1 - Censored[Raw[:, i] == 0] == 1,
                         label=Symbols[i] + " WT")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] == 1) & np.sum(Raw[:, i] == 0):
                 LogRank = logrank_test(Survival[Raw[:, i] == 0],
                                        Survival[Raw[:, i] == 1],
-                                       1-Censored[Raw[:, i] == 0] == 1,
-                                       1-Censored[Raw[:, i] == 1] == 1)
+                                       1 - Censored[Raw[:, i] == 0] == 1,
+                                       1 - Censored[Raw[:, i] == 1] == 1)
             plt.ylim(0, 1)
             lg = plt.gca().get_legend()
             if LogRank is not None:
@@ -441,33 +452,33 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
             # extract and plot altered and unaltered survival profiles
             if Amplified:
                 kmf.fit(Survival[Raw[:, i] > 0],
-                        1-Censored[Raw[:, i] > 0] == 1,
+                        1 - Censored[Raw[:, i] > 0] == 1,
                         label=Symbols[i] + " " + Types[i] + " Amplified")
                 kmf.plot(ax=Axes, show_censors=True)
-                if(np.sum(Raw[:, i] <= 0)):
+                if (np.sum(Raw[:, i] <= 0)):
                     kmf.fit(Survival[Raw[:, i] <= 0],
-                            1-Censored[Raw[:, i] <= 0] == 1,
+                            1 - Censored[Raw[:, i] <= 0] == 1,
                             label=Symbols[i] + " " + Types[i] +
                             " not Amplified")
                     kmf.plot(ax=Axes, show_censors=True)
                     LogRank = logrank_test(Survival[Raw[:, i] > 0],
                                            Survival[Raw[:, i] <= 0],
-                                           1-Censored[Raw[:, i] > 0] == 1,
-                                           1-Censored[Raw[:, i] <= 0] == 1)
+                                           1 - Censored[Raw[:, i] > 0] == 1,
+                                           1 - Censored[Raw[:, i] <= 0] == 1)
             else:
                 kmf.fit(Survival[Raw[:, i] < 0],
-                        1-Censored[Raw[:, i] < 0] == 1,
+                        1 - Censored[Raw[:, i] < 0] == 1,
                         label=Symbols[i] + " " + Types[i] + " Deleted")
                 kmf.plot(ax=Axes, show_censors=True)
-                if(np.sum(Raw[:, i] >= 0)):
+                if (np.sum(Raw[:, i] >= 0)):
                     kmf.fit(Survival[Raw[:, i] >= 0],
-                            1-Censored[Raw[:, i] >= 0] == 1,
+                            1 - Censored[Raw[:, i] >= 0] == 1,
                             label=Symbols[i] + " " + Types[i] + " not Deleted")
                     kmf.plot(ax=Axes, show_censors=True)
                     LogRank = logrank_test(Survival[Raw[:, i] < 0],
                                            Survival[Raw[:, i] >= 0],
-                                           1-Censored[Raw[:, i] < 0] == 1,
-                                           1-Censored[Raw[:, i] >= 0] == 1)
+                                           1 - Censored[Raw[:, i] < 0] == 1,
+                                           1 - Censored[Raw[:, i] >= 0] == 1)
             if LogRank is not None:
                 plt.title('Logrank p=' + str(LogRank.p_value))
             plt.ylim(0, 1)
@@ -481,38 +492,40 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
 
             # extract and plot altered and unaltered survival profiles
             if Amplified:
-                if(np.sum(Raw[:, i] > 0.25)):
+                if (np.sum(Raw[:, i] > 0.25)):
                     kmf.fit(Survival[Raw[:, i] > 0.25],
-                            1-Censored[Raw[:, i] > 0.25] == 1,
+                            1 - Censored[Raw[:, i] > 0.25] == 1,
                             label=Symbols[i] + " " + Types[i] + " Amplified")
                     kmf.plot(ax=Axes, show_censors=True)
-                if(np.sum(Raw[:, i] <= 0.25)):
+                if (np.sum(Raw[:, i] <= 0.25)):
                     kmf.fit(Survival[Raw[:, i] <= 0.25],
-                            1-Censored[Raw[:, i] <= 0.25] == 1,
+                            1 - Censored[Raw[:, i] <= 0.25] == 1,
                             label=Symbols[i] + " " + Types[i] +
                             " not Amplified")
                     kmf.plot(ax=Axes, show_censors=True)
-                if(np.sum(Raw[:, i] > 0.25) & np.sum(Raw[:, i] <= 0.25)):
-                    LogRank = logrank_test(Survival[Raw[:, i] > 0.25],
-                                           Survival[Raw[:, i] <= 0.25],
-                                           1-Censored[Raw[:, i] > 0.25] == 1,
-                                           1-Censored[Raw[:, i] <= 0.25] == 1)
+                if (np.sum(Raw[:, i] > 0.25) & np.sum(Raw[:, i] <= 0.25)):
+                    LogRank = logrank_test(
+                        Survival[Raw[:, i] > 0.25],
+                        Survival[Raw[:, i] <= 0.25],
+                        1 - Censored[Raw[:, i] > 0.25] == 1,
+                        1 - Censored[Raw[:, i] <= 0.25] == 1)
             else:
                 if np.sum(Raw[:, i] < -0.25):
                     kmf.fit(Survival[Raw[:, i] < -0.25],
-                            1-Censored[Raw[:, i] < -0.25] == 1,
+                            1 - Censored[Raw[:, i] < -0.25] == 1,
                             label=Symbols[i] + " " + Types[i] + " Deleted")
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] >= -0.25):
                     kmf.fit(Survival[Raw[:, i] >= -0.25],
-                            1-Censored[Raw[:, i] >= -0.25] == 1,
+                            1 - Censored[Raw[:, i] >= -0.25] == 1,
                             label=Symbols[i] + " " + Types[i] + " not Deleted")
                     kmf.plot(ax=Axes, show_censors=True)
                 if np.sum(Raw[:, i] < -0.25) & np.sum(Raw[:, i] >= -0.25):
-                    LogRank = logrank_test(Survival[Raw[:, i] < -0.25],
-                                           Survival[Raw[:, i] >= -0.25],
-                                           1-Censored[Raw[:, i] < -0.25] == 1,
-                                           1-Censored[Raw[:, i] >= -0.25] == 1)
+                    LogRank = logrank_test(
+                        Survival[Raw[:, i] < -0.25],
+                        Survival[Raw[:, i] >= -0.25],
+                        1 - Censored[Raw[:, i] < -0.25] == 1,
+                        1 - Censored[Raw[:, i] >= -0.25] == 1)
             plt.ylim(0, 1)
             lg = plt.gca().get_legend()
             if LogRank is not None:
@@ -520,28 +533,27 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
             plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
         elif (Types[i] == 'Protein') or (Types[i] == 'mRNA'):
-
             # determine median expression
             Median = np.median(Raw[:, i])
 
             # extract and altered and unaltered survival profiles
             if np.sum(Raw[:, i] > Median):
                 kmf.fit(Survival[Raw[:, i] > Median],
-                        1-Censored[Raw[:, i] > Median] == 1,
+                        1 - Censored[Raw[:, i] > Median] == 1,
                         label=Symbols[i] + " " + Types[i] +
                         " Higher Expression")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] <= Median):
                 kmf.fit(Survival[Raw[:, i] <= Median],
-                        1-Censored[Raw[:, i] <= Median] == 1,
+                        1 - Censored[Raw[:, i] <= Median] == 1,
                         label=Symbols[i] + " " + Types[i] +
                         " Lower Expression")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
                 LogRank = logrank_test(Survival[Raw[:, i] > Median],
                                        Survival[Raw[:, i] <= Median],
-                                       1-Censored[Raw[:, i] > Median] == 1,
-                                       1-Censored[Raw[:, i] <= Median] == 1)
+                                       1 - Censored[Raw[:, i] > Median] == 1,
+                                       1 - Censored[Raw[:, i] <= Median] == 1)
             plt.ylim(0, 1)
             if LogRank is not None:
                 plt.title('Logrank p=' + str(LogRank.p_value))
@@ -556,19 +568,19 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
             # extract and altered and unaltered survival profiles
             if np.sum(Raw[:, i] > Median):
                 kmf.fit(Survival[Raw[:, i] > Median],
-                        1-Censored[Raw[:, i] > Median] == 1,
+                        1 - Censored[Raw[:, i] > Median] == 1,
                         label=Symbols[i] + " Higher Enrichment")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] <= Median):
                 kmf.fit(Survival[Raw[:, i] <= Median],
-                        1-Censored[Raw[:, i] <= Median] == 1,
+                        1 - Censored[Raw[:, i] <= Median] == 1,
                         label=Symbols[i] + " Lower Enrichment")
                 kmf.plot(ax=Axes, show_censors=True)
             if np.sum(Raw[:, i] > Median) & np.sum(Raw[:, i] <= Median):
                 LogRank = logrank_test(Survival[Raw[:, i] > Median],
                                        Survival[Raw[:, i] <= Median],
-                                       1-Censored[Raw[:, i] > Median] == 1,
-                                       1-Censored[Raw[:, i] <= Median] == 1)
+                                       1 - Censored[Raw[:, i] > Median] == 1,
+                                       1 - Censored[Raw[:, i] <= Median] == 1)
             plt.ylim(0, 1)
             if LogRank is not None:
                 plt.title('Logrank p=' + str(LogRank.p_value))
@@ -576,8 +588,8 @@ def KMPlots(Gradients, Raw, Symbols, Types, Survival, Censored):
             plt.setp(lg.get_texts(), fontsize=SURV_FONT)
 
         else:
-            raise ValueError('Unrecognized feature type ' + '"' +
-                             Types[i] + '"')
+            raise ValueError('Unrecognized feature type ' + '"' + Types[i] +
+                             '"')
 
     return Figures
 
@@ -590,8 +602,9 @@ def _SplitSymbols(Symbols):
 
     # modify duplicate symbols where needed - append index to each instance
     Prefix = [Symbol[0:str.rfind(str(Symbol), '_')] for Symbol in Symbols]
-    Types = [Symbol[str.rfind(str(Symbol), '_')+1:].strip()
-             for Symbol in Symbols]
+    Types = [
+        Symbol[str.rfind(str(Symbol), '_') + 1:].strip() for Symbol in Symbols
+    ]
 
     # copy prefixes
     Corrected = Prefix[:]
@@ -613,7 +626,9 @@ def _WrapSymbols(Symbols, Length=20):
     """
 
     # remove whitespace and wrap
-    Corrected = ['\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
-                 for Symbol in Symbols]
+    Corrected = [
+        '\n'.join(wrap(Symbol.strip().replace('_', ' '), Length))
+        for Symbol in Symbols
+    ]
 
     return Corrected

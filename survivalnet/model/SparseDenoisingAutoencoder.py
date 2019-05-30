@@ -4,6 +4,7 @@ import theano
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
+
 class SparseDenoisingAutoencoder(object):
     """Sparse Denoising Auto-Encoder class (dA)
     A denoising autoencoders tries to reconstruct the input from a corrupted
@@ -21,19 +22,17 @@ class SparseDenoisingAutoencoder(object):
         L(x,z) = -sum_{k=1}^d [x_k \log z_k + (1-x_k) \log( 1-z_k)]      (4)
     """
 
-    def __init__(
-        self,
-        numpy_rng,
-        theano_rng=None,
-        input=None,
-        n_visible=784,
-        n_hidden=500,
-        W=None,
-        bhid=None,
-        bvis=None,
-        non_lin=None,
-        ce=False
-    ):
+    def __init__(self,
+                 numpy_rng,
+                 theano_rng=None,
+                 input=None,
+                 n_visible=784,
+                 n_hidden=500,
+                 W=None,
+                 bhid=None,
+                 bvis=None,
+                 non_lin=None,
+                 ce=False):
         """
         Initialize the dA class by specifying the number of visible units (the
         dimension d of the input ), the number of hidden units ( the dimension
@@ -77,7 +76,7 @@ class SparseDenoisingAutoencoder(object):
         self.ce = ce
         # create a Theano random generator that gives symbolic random values
         if not theano_rng:
-            theano_rng = RandomStreams(numpy_rng.randint(2 ** 30))
+            theano_rng = RandomStreams(numpy_rng.randint(2**30))
 
         # note : W' was written as `W_prime` and b' as `b_prime`
         if not W:
@@ -86,34 +85,23 @@ class SparseDenoisingAutoencoder(object):
             # 4*sqrt(6./(n_hidden+n_visible))the output of uniform if
             # converted using asarray to dtype
             # theano.config.floatX so that the code is runable on GPU
-            initial_W = numpy.asarray(
-                numpy_rng.uniform(
-                    low=-4 * numpy.sqrt(6. / (n_hidden + n_visible)),
-                    high=4 * numpy.sqrt(6. / (n_hidden + n_visible)),
-                    size=(n_visible, n_hidden)
-                ),
-                dtype=theano.config.floatX
-            )
+            initial_W = numpy.asarray(numpy_rng.uniform(
+                low=-4 * numpy.sqrt(6. / (n_hidden + n_visible)),
+                high=4 * numpy.sqrt(6. / (n_hidden + n_visible)),
+                size=(n_visible, n_hidden)),
+                                      dtype=theano.config.floatX)
             W = theano.shared(value=initial_W, name='W', borrow=True)
 
         if not bvis:
-            bvis = theano.shared(
-                value=numpy.zeros(
-                    n_visible,
-                    dtype=theano.config.floatX
-                ),
-                borrow=True
-            )
+            bvis = theano.shared(value=numpy.zeros(n_visible,
+                                                   dtype=theano.config.floatX),
+                                 borrow=True)
 
         if not bhid:
-            bhid = theano.shared(
-                value=numpy.zeros(
-                    n_hidden,
-                    dtype=theano.config.floatX
-                ),
-                name='b',
-                borrow=True
-            )
+            bhid = theano.shared(value=numpy.zeros(n_hidden,
+                                                   dtype=theano.config.floatX),
+                                 name='b',
+                                 borrow=True)
 
         self.W = W
         # b corresponds to the bias of the hidden
@@ -152,7 +140,8 @@ class SparseDenoisingAutoencoder(object):
                 result. This is needed to allow the gpu to work
                 correctly as it only support float32 for now.
         """
-        return self.theano_rng.binomial(size=input.shape, n=1,
+        return self.theano_rng.binomial(size=input.shape,
+                                        n=1,
                                         p=1 - corruption_level,
                                         dtype=theano.config.floatX) * input
 
@@ -177,9 +166,9 @@ class SparseDenoisingAutoencoder(object):
         #        minibatches, L will be a vector, with one entry per
         #        example in minibatch
         if (self.ce):
-            L = - T.sum(self.x * T.log(z) + (1 - self.x) * T.log(1 - z), axis=1)
+            L = -T.sum(self.x * T.log(z) + (1 - self.x) * T.log(1 - z), axis=1)
         else:
-            L = T.sum((self.x - z) ** 2, axis=1)
+            L = T.sum((self.x - z)**2, axis=1)
         # note : L is now a vector, where each element is the
         #        cross-entropy or mean squared error cost of the reconstruction of the
         #        corresponding example of the minibatch. We need to
@@ -191,9 +180,7 @@ class SparseDenoisingAutoencoder(object):
         # to its parameters
         gparams = T.grad(cost, self.params)
         # generate the list of updates
-        updates = [
-            (param, param - learning_rate * gparam)
-            for param, gparam in zip(self.params, gparams)
-        ]
+        updates = [(param, param - learning_rate * gparam)
+                   for param, gparam in zip(self.params, gparams)]
 
         return (cost, updates)

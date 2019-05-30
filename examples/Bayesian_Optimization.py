@@ -15,7 +15,7 @@ def tune():
 	params['n_iter_relearn'] = 1
 	params['n_init_samples'] = 2
 
-	print "*** Model Selection with BayesOpt ***"
+	print("*** Model Selection with BayesOpt ***")
 	n = 6  # n dimensions
 	# params: #layer, width, dropout, nonlinearity, l1_rate, l2_rate
 	lb = np.array([1 , 10 , 0., 0., 0., 0.])
@@ -32,8 +32,8 @@ def tune():
 	#x_set = np.array([[layers, hsizes, drates], dtype=float).transpose()
 	#mvalue, x_out, _ = bayesopt.optimize_discrete(cost_func, x_set, params)
 
-	print "Result", mvalue, "at", x_out
-	print "Running time:", clock() - start, "seconds"
+	print("Result", mvalue, "at", x_out)
+	print("Running time:", clock() - start, "seconds")
 	return mvalue, x_out
 
 

@@ -4,7 +4,7 @@ import theano.tensor as T
 
 
 def RiskCohort(Model, Features):
-	"""
+    """
 	Generates partial derivative weights of features and risk for the given
 	model and profiles. Generates mean and standard deviation of these partial
 	derivative weights.
@@ -33,21 +33,21 @@ def RiskCohort(Model, Features):
 	a [ 1 * D] matrix contains standrad deviation of feautre weights.
 	"""
 
-	# initialize container for risk gradient profiles
-	Gradients = np.zeros(Features.shape)
+    # initialize container for risk gradient profiles
+    Gradients = np.zeros(Features.shape)
 
-	# copy input to matrix for Theano
-	Matrix = np.matrix(Features)
+    # copy input to matrix for Theano
+    Matrix = np.matrix(Features)
 
-	# iterate through samples, calculating risk gradient profile for each
-	for i in np.arange(Features.shape[0]):
-		Gradients[i, :] = _RiskBackpropagate(Model, Matrix[i, :])
+    # iterate through samples, calculating risk gradient profile for each
+    for i in np.arange(Features.shape[0]):
+        Gradients[i, :] = _RiskBackpropagate(Model, Matrix[i, :])
 
-	return Gradients
+    return Gradients
 
 
 def _RiskBackpropagate(Model, Features):
-	"""
+    """
 	Generates partial derivatives of input features in a neural network model.
 	These represent the rate of change of risk with respect to each input
 	feature.
@@ -67,27 +67,30 @@ def _RiskBackpropagate(Model, Features):
 	an array of the feature weights.
 	"""
 
-	# define partial derivative
-	X = T.matrix('X')
-	AtRisk = T.ivector('AtRisk')
-	Observed = T.ivector('Observed')
-	Is_train = T.scalar('Is_train', dtype='int32')
-	masks = T.lmatrix('mask_' + str(0))
-	partial_derivative = th.function(on_unused_input='ignore',
-			inputs=[X, AtRisk, Observed, Is_train, masks],
-			outputs=T.grad(Model.risk_layer.output[0],
-				Model.x),
-			givens={Model.x: X, Model.o: AtRisk,
-				Model.at_risk: Observed,
-				Model.is_train: Is_train,
-				Model.masks[0]: masks},
-			name='partial_derivative')
+    # define partial derivative
+    X = T.matrix('X').astype('float32')
+    AtRisk = T.ivector('AtRisk')
+    Observed = T.ivector('Observed')
+    Is_train = T.scalar('Is_train', dtype='int32')
+    masks = T.lmatrix('mask_' + str(0))
+    partial_derivative = th.function(
+        on_unused_input='ignore',
+        inputs=[X, AtRisk, Observed, Is_train, masks],
+        outputs=T.grad(Model.risk_layer.output[0], Model.x),
+        givens={
+            Model.x: X,
+            Model.o: AtRisk,
+            Model.at_risk: Observed,
+            Model.is_train: Is_train,
+            Model.masks[0]: masks
+        },
+        name='partial_derivative')
 
-	# define parameters for risk and calculate partial
-	sample_O = np.array([0]).astype(np.int32)
-	sample_T = np.array([0]).astype(np.int32)
-	# Create dummy masks for graph
-	dummy_masks = np.ones((1, Model.n_hidden), dtype='int64')
-	Gradient = partial_derivative(Features, sample_O, sample_T, 0, dummy_masks)
+    # define parameters for risk and calculate partial
+    sample_O = np.array([0]).astype(np.int32)
+    sample_T = np.array([0]).astype(np.int32)
+    # Create dummy masks for graph
+    dummy_masks = np.ones((1, Model.n_hidden), dtype='int64')
+    Gradient = partial_derivative(Features, sample_O, sample_T, 0, dummy_masks)
 
-	return Gradient
+    return Gradient

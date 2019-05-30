@@ -12,7 +12,6 @@ from .WriteRNK import WriteRNK
 from .ReadGMT import ReadGMT
 from .RiskCluster import RiskCluster
 
-
 # list functions and classes available for public use
 __all__ = (
     'FeatureAnalysis',

@@ -10,8 +10,17 @@ from .WriteGCT import WriteGCT
 from .WriteRNK import WriteRNK
 
 
-def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
-                    NBox=10, NScatter=10, NKM=10, NCluster=100, Tau=0.05,
+def FeatureAnalysis(Model,
+                    Normalized,
+                    Raw,
+                    Symbols,
+                    Survival,
+                    Censored,
+                    NBox=10,
+                    NScatter=10,
+                    NKM=10,
+                    NCluster=100,
+                    Tau=0.05,
                     Path=None):
     """
     Generate visualizations of risk profiles. Backpropagation is used to
@@ -63,9 +72,9 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     Wrapped = _WrapSymbols(Corrected)
 
     # generate risk derivative profiles for cohort
-    print "Generting risk gradient profiles..."
+    print("Generting risk gradient profiles...")
     Gradients = RiskCohort(Model, Normalized)
-    
+
     # normalize risk derivative profiles
     Gradients = Gradients / np.outer(np.linalg.norm(Gradients, axis=1),
                                      np.ones((1, Gradients.shape[1])))
@@ -79,40 +88,39 @@ def FeatureAnalysis(Model, Normalized, Raw, Symbols, Survival, Censored,
     cGradients = Gradients[:, Order]
 
     # generate ranked box plot series
-    print "Generating risk gradient boxplot..."
+    print("Generating risk gradient boxplot...")
     RBFig = RankedBox(cGradients[:, 0:NBox],
                       [cSymbols[i] for i in np.arange(NBox)],
                       [cTypes[i] for i in np.arange(NBox)],
-                      XLabel='Model Features', YLabel='Risk Gradient')
+                      XLabel='Model Features',
+                      YLabel='Risk Gradient')
 
     # generate paired scatter plot for gradients
-    print "Generating paired scatter gradient plots..."
+    print("Generating paired scatter gradient plots...")
     PSGradFig = PairScatter(cGradients[:, 0:NScatter],
                             [cSymbols[i] for i in np.arange(NScatter)],
                             [cTypes[i] for i in np.arange(NScatter)])
 
     # generate paired scatter plot for features
-    print "Generating paired scatter feature plots..."
+    print("Generating paired scatter feature plots...")
     PSFeatFig = PairScatter(cRaw[:, 0:NScatter],
                             [cSymbols[i] for i in np.arange(NScatter)],
                             [cTypes[i] for i in np.arange(NScatter)])
 
     # generate cluster plot
-    print "Generating cluster analysis..."
+    print("Generating cluster analysis...")
     CFig, Labels = RiskCluster(cGradients[:, 0:NCluster], cRaw[:, 0:NCluster],
                                [cSymbols[i] for i in np.arange(NCluster)],
-                               [cTypes[i] for i in np.arange(NCluster)],
-                               Tau)
+                               [cTypes[i] for i in np.arange(NCluster)], Tau)
 
     # generate Kaplan-Meier plots for individual features
-    print "Generating Kaplan-Meier plots..."
+    print("Generating Kaplan-Meier plots...")
     KMFigs = KMPlots(cGradients[:, 0:NKM], cRaw[:, 0:NKM],
                      [cSymbols[i] for i in np.arange(NKM)],
-                     [cTypes[i] for i in np.arange(NKM)],
-                     Survival, Censored)
+                     [cTypes[i] for i in np.arange(NKM)], Survival, Censored)
 
     # save figures
-    print "Saving figures and outputs..."
+    print("Saving figures and outputs...")
     if Path is not None:
         # save standard figures
         RBFig.savefig(Path + 'RankedBox.pdf')

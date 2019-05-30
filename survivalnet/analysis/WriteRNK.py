@@ -36,7 +36,7 @@ def WriteRNK(Genes, Scores, File):
     try:
         Rnk = open(File, 'w')
     except IOError:
-        print "Cannot create file ", File
+        print("Cannot create file ", File)
 
     # write contents to file
     for i in Order:

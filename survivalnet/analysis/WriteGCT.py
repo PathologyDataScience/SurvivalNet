@@ -34,19 +34,19 @@ def WriteGCT(Genes, Samples, Scores, File):
     try:
         Gct = open(File, 'w')
     except IOError:
-        print "Cannot create file ", File
+        print("Cannot create file ", File)
 
     # write leading rows
     Gct.write('#1.2\n')
     Gct.write(str(Scores.shape[1]) + '\t' + str(Scores.shape[0]) + '\n')
     Gct.write("NAME\tDescription\t")
     if Samples is None:
-        for i in range(Scores.shape[0]-1):
-            Gct.write("Sample." + str(i+1) + '\t')
+        for i in range(Scores.shape[0] - 1):
+            Gct.write("Sample." + str(i + 1) + '\t')
         Gct.write("Sample." + str(Scores.shape[0]) + '\n')
     else:
         for i, Sample in enumerate(Samples):
-            if i < len(Samples)-1:
+            if i < len(Samples) - 1:
                 Gct.write(Sample + '\t')
             else:
                 Gct.write(Sample + '\n')
@@ -54,7 +54,7 @@ def WriteGCT(Genes, Samples, Scores, File):
     # write contents to file
     for i, Symbol in enumerate(Genes):
         Gct.write(Symbol + '\t\t')
-        for j in range(Scores.shape[0]-1):
+        for j in range(Scores.shape[0] - 1):
             Gct.write(str(Scores[j, i]) + '\t')
         Gct.write(str(Scores[-1, i]) + '\n')
 

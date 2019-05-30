@@ -84,20 +84,22 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     # cluster samples and generate dendrogram
     SampleDist = dist.pdist(Normalized.T, 'correlation')
     SampleDist = dist.squareform(SampleDist)
-    SampleLinkage = sch.linkage(SampleDist, method='average',
+    SampleLinkage = sch.linkage(SampleDist,
+                                method='average',
                                 metric='correlation')
-    Labels = sch.fcluster(SampleLinkage, 0.7*max(SampleLinkage[:, 2]),
+    Labels = sch.fcluster(SampleLinkage, 0.7 * max(SampleLinkage[:, 2]),
                           'distance')
 
     # cluster features and generate dendrogram
     FeatureDist = dist.pdist(Normalized, 'correlation')
     FeatureDist = dist.squareform(FeatureDist)
-    FeatureLinkage = sch.linkage(FeatureDist, method='average',
+    FeatureLinkage = sch.linkage(FeatureDist,
+                                 method='average',
                                  metric='correlation')
 
     # capture cluster associations
-    Significant, SigTypes = ClusterAssociations(Raw, Symbols, Types,
-                                                Labels, Tau)
+    Significant, SigTypes = ClusterAssociations(Raw, Symbols, Types, Labels,
+                                                Tau)
 
     # calculate layout parameters
     TRACK_H = TRACK * len(Significant)  # total height of tracks
@@ -117,9 +119,8 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     SampleOrder = SampleDendrogram['leaves']
 
     # layout and generate left dendrogram (features)
-    FeatureHandle = Figure.add_axes([FEATURE_X, FEATURE_Y,
-                                     FEATURE_W, FEATURE_H],
-                                    frame_on=False)
+    FeatureHandle = Figure.add_axes(
+        [FEATURE_X, FEATURE_Y, FEATURE_W, FEATURE_H], frame_on=False)
     FeatureDendrogram = sch.dendrogram(FeatureLinkage, orientation='right')
     FeatureHandle.set_xticks([])
     FeatureHandle.set_yticks([])
@@ -131,8 +132,7 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     # layout and generate heatmap
     Heatmap = Figure.add_axes([HEATMAP_X, HEATMAP_Y, HEATMAP_W, HEATMAP_H],
                               frame_on=False)
-    Heatmap.matshow(Reordered, aspect='auto', origin='lower',
-                    cmap=plt.cm.bwr)
+    Heatmap.matshow(Reordered, aspect='auto', origin='lower', cmap=plt.cm.bwr)
     Heatmap.set_xticks([])
     Heatmap.set_yticks([])
 
@@ -149,15 +149,18 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     CNVs = CNVs[SampleOrder, :].T
 
     # layout and generate mutation tracks
-    gm = Figure.add_axes([TRACK_X, TRACK_Y + len(SigCNV)*TRACK,
-                          TRACK_W, TRACK_H - len(SigCNV)*TRACK],
+    gm = Figure.add_axes([
+        TRACK_X, TRACK_Y + len(SigCNV) * TRACK, TRACK_W,
+        TRACK_H - len(SigCNV) * TRACK
+    ],
                          frame_on=False)
     cmap_g = mpl.colors.ListedColormap(['k', 'w'])
     gm.matshow(Mutations, aspect='auto', origin='lower', cmap=cmap_g)
     for i in range(len(SigMut)):
-        gm.text(-SPACING, i / np.float(len(SigMut)) +
-                1/np.float(2*len(SigMut)),
-                SigMut[i], fontsize=6,
+        gm.text(-SPACING,
+                i / np.float(len(SigMut)) + 1 / np.float(2 * len(SigMut)),
+                SigMut[i],
+                fontsize=6,
                 verticalalignment='center',
                 horizontalalignment='right',
                 transform=gm.transAxes)
@@ -165,15 +168,20 @@ def RiskCluster(Gradients, Raw, Symbols, Types, Tau=0.05):
     gm.set_yticks([])
 
     # layout and generate CNV tracks
-    cnv = Figure.add_axes([TRACK_X, TRACK_Y,
-                           TRACK_W, TRACK_H - len(SigMut)*TRACK],
-                          frame_on=False)
-    cnv.matshow(CNVs, aspect='auto', origin='lower', cmap=plt.cm.bwr,
-                vmin=-2, vmax=2)
+    cnv = Figure.add_axes(
+        [TRACK_X, TRACK_Y, TRACK_W, TRACK_H - len(SigMut) * TRACK],
+        frame_on=False)
+    cnv.matshow(CNVs,
+                aspect='auto',
+                origin='lower',
+                cmap=plt.cm.bwr,
+                vmin=-2,
+                vmax=2)
     for i in range(len(SigCNV)):
-        cnv.text(-SPACING, i / np.float(len(SigCNV)) +
-                 1/np.float(2*len(SigCNV)),
-                 SigCNV[i], fontsize=6,
+        cnv.text(-SPACING,
+                 i / np.float(len(SigCNV)) + 1 / np.float(2 * len(SigCNV)),
+                 SigCNV[i],
+                 fontsize=6,
                  verticalalignment='center',
                  horizontalalignment='right',
                  transform=cnv.transAxes)
@@ -242,9 +250,9 @@ def ClusterAssociations(Raw, Symbols, Types, Labels, Tau=0.05):
 
         # build contingency table - expected and observed
         Observed = np.zeros((2, np.max(Labels)))
-        for j in np.arange(1, np.max(Labels)+1):
-            Observed[0, j-1] = np.sum(Raw[Labels == j, Mutations[i]] == 0)
-            Observed[1, j-1] = np.sum(Raw[Labels == j, Mutations[i]] == 1)
+        for j in np.arange(1, np.max(Labels) + 1):
+            Observed[0, j - 1] = np.sum(Raw[Labels == j, Mutations[i]] == 0)
+            Observed[1, j - 1] = np.sum(Raw[Labels == j, Mutations[i]] == 1)
         RowSum = np.sum(Observed, axis=0)
         ColSum = np.sum(Observed, axis=1)
         Expected = np.outer(ColSum, RowSum) / np.sum(Observed.flatten())
@@ -260,22 +268,22 @@ def ClusterAssociations(Raw, Symbols, Types, Labels, Tau=0.05):
 
         # separate out CNV values by cluster and perform test - hack for bad
         # interfact to scipy kruskalwallis
-        if(np.max(Labels) == 2):
+        if (np.max(Labels) == 2):
             CNV1 = Raw[Labels == 1, CNVs[i]]
             CNV2 = Raw[Labels == 2, CNVs[i]]
             stat, p = kruskalwallis(CNV1, CNV2)
-        elif(np.max(Labels) == 3):
+        elif (np.max(Labels) == 3):
             CNV1 = Raw[Labels == 1, CNVs[i]]
             CNV2 = Raw[Labels == 2, CNVs[i]]
             CNV3 = Raw[Labels == 3, CNVs[i]]
             stat, p = kruskalwallis(CNV1, CNV2, CNV3)
-        elif(np.max(Labels) == 4):
+        elif (np.max(Labels) == 4):
             CNV1 = Raw[Labels == 1, CNVs[i]]
             CNV2 = Raw[Labels == 2, CNVs[i]]
             CNV3 = Raw[Labels == 3, CNVs[i]]
             CNV4 = Raw[Labels == 4, CNVs[i]]
             stat, p = kruskalwallis(CNV1, CNV2, CNV3, CNV4)
-        elif(np.max(Labels) == 5):
+        elif (np.max(Labels) == 5):
             CNV1 = Raw[Labels == 1, CNVs[i]]
             CNV2 = Raw[Labels == 2, CNVs[i]]
             CNV3 = Raw[Labels == 3, CNVs[i]]

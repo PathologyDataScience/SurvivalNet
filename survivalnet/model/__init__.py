@@ -7,9 +7,9 @@ from .Model import Model
 
 # list functions and classes available for public use
 __all__ = (
-	'HiddenLayer',
-	'DropoutHiddenLayer',
-	'RiskLayer',
-	'SparseDenoisingAutoencoder',
-	'Model',
+    'HiddenLayer',
+    'DropoutHiddenLayer',
+    'RiskLayer',
+    'SparseDenoisingAutoencoder',
+    'Model',
 )

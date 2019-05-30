@@ -4,7 +4,7 @@ import numpy as np
 import scipy.io as sio
 from survivalnet.optimization import SurvivalAnalysis
 import theano
-import cPickle
+import pickle
 
 LEARNING_RATE = 0.001
 EPOCHS = 40
@@ -21,9 +21,9 @@ def cost_func(params):
 
 	# Loads data sets saved by the Run.py module.
 	with open('train_set', 'rb') as f:
-		train_set = cPickle.load(f)
+		train_set = pickle.load(f)
 	with open('val_set', 'rb') as f:
-		val_set = cPickle.load(f)
+		val_set = pickle.load(f)
 
 	pretrain_config = None         #No pre-training 
 	pretrain_set = None
@@ -31,8 +31,8 @@ def cost_func(params):
 	finetune_config = {'ft_lr':LEARNING_RATE, 'ft_epochs':EPOCHS}
 	
 	# Prints experiment identifier.         
-	print('nl{}-hs{}-dor{}_nonlin{}'.format(str(n_layers), str(n_hidden),
-											str(do_rate), str(nonlin))) 
+	print(('nl{}-hs{}-dor{}_nonlin{}'.format(str(n_layers), str(n_hidden),
+											str(do_rate), str(nonlin)))) 
 	
 	_, _, val_costs, val_cindices, _, _, _, maxIter = train(pretrain_set,
 			train_set, val_set, pretrain_config, finetune_config, n_layers,
@@ -40,11 +40,11 @@ def cost_func(params):
 			non_lin=nonlin, optim=OPTIM, verbose=False, earlystp=False)
 	
 	if not val_costs or np.isnan(val_costs[-1]):
-		print 'Skipping due to NAN'
+		print('Skipping due to NAN')
 		return 1 
 	
 	return (1 - val_cindices[maxIter])
 
 if __name__ == '__main__':
 	res = cost_func([1.0, 38.0, 0.3, 0.4, 0.00004, 0.00004])
-	print res
+	print(res)

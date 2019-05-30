@@ -8,9 +8,17 @@ from .Visualization import PairScatter
 from .Visualization import KMPlots
 
 
-def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
-                    Survival, Censored, Alpha=0, GSEANormalize=False,
-                    NPlot=10, Path=None):
+def PathwayAnalysis(Model,
+                    Normalized,
+                    Symbols,
+                    SetNames,
+                    Sets,
+                    Survival,
+                    Censored,
+                    Alpha=0,
+                    GSEANormalize=False,
+                    NPlot=10,
+                    Path=None):
     """
     Pathway-based analysis of model sensitivity to inputs. Used with models
     trained on pure gene expression features. Transforms risk gradients of
@@ -57,16 +65,19 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
     CorrectedSetNames = _WrapSymbols(CorrectedSetNames)
 
     # trim gene symbols names
-    CorrectedSymbols = [Symbol[0:str.rfind(str(Symbol), '_')]
-                        for Symbol in Symbols]
+    CorrectedSymbols = [
+        Symbol[0:str.rfind(str(Symbol), '_')] for Symbol in Symbols
+    ]
 
     # generate risk derivative profiles for cohort
-    print "Generting risk gradient profiles..."
+    print("Generting risk gradient profiles...")
     Gradients = RiskCohort(Model, Normalized)
 
     # perform GSEA on mean feature risk profiles
-    ES = np.squeeze(SSGSEA(np.median(Gradients, axis=0)[np.newaxis, :],
-                           CorrectedSymbols, Sets, Alpha, False))
+    ES = np.squeeze(
+        SSGSEA(
+            np.median(Gradients, axis=0)[np.newaxis, :], CorrectedSymbols,
+            Sets, Alpha, False))
 
     # re-order pathways by mean absolute enrichment score
     Order = np.argsort(-np.abs(ES))
@@ -75,9 +86,8 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
     cES = ES[Order]
 
     # generate ranked bar plot
-    print "Generating mean enrichment score bar plot..."
-    BarFig = RankedBar(cES[0:NPlot],
-                       [cSetNames[i] for i in np.arange(NPlot)],
+    print("Generating mean enrichment score bar plot...")
+    BarFig = RankedBar(cES[0:NPlot], [cSetNames[i] for i in np.arange(NPlot)],
                        [cTypes[i] for i in np.arange(NPlot)],
                        XLabel='Pathway',
                        YLabel='Enrichment Score')
@@ -89,7 +99,7 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
     cSSES = SSES[:, Order]
 
     # generate ranked box plot series
-    print "Generating single-sample enrichment boxplot..."
+    print("Generating single-sample enrichment boxplot...")
     BoxFig = RankedBox(cSSES[:, 0:NPlot],
                        [cSetNames[i] for i in np.arange(NPlot)],
                        [cTypes[i] for i in np.arange(NPlot)],
@@ -97,20 +107,19 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
                        YLabel='Single-Sample Enrichment Score')
 
     # generate paired scatter plot for gradients
-    print "Generating single-sample enrichment scatter plots..."
+    print("Generating single-sample enrichment scatter plots...")
     PSGradFig = PairScatter(cSSES[:, 0:NPlot],
                             [cSetNames[i] for i in np.arange(NPlot)],
                             [cTypes[i] for i in np.arange(NPlot)])
 
     # generate Kaplan-Meier plots for individual features
-    print "Generating single-sample enrichment Kaplan-Meier plots..."
+    print("Generating single-sample enrichment Kaplan-Meier plots...")
     KMFigs = KMPlots(cSSES[:, 0:NPlot], cSSES[:, 0:NPlot],
                      [cSetNames[i] for i in np.arange(NPlot)],
-                     [cTypes[i] for i in np.arange(NPlot)],
-                     Survival, Censored)
+                     [cTypes[i] for i in np.arange(NPlot)], Survival, Censored)
 
     # save figures
-    print "Saving figures..."
+    print("Saving figures...")
     if Path is not None:
 
         # save standard figures
@@ -118,5 +127,4 @@ def PathwayAnalysis(Model, Normalized, Symbols, SetNames, Sets,
         BoxFig.savefig(Path + 'Pathway.Box.pdf')
         PSGradFig.savefig(Path + 'Pathway.PairedScatter.pdf')
         for i, Figure in enumerate(KMFigs):
-            Figure.savefig(Path + 'Pathway.KM.' +
-                           SetNames[Order[i]] + '.pdf')
+            Figure.savefig(Path + 'Pathway.KM.' + SetNames[Order[i]] + '.pdf')
